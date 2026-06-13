@@ -3,219 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Ultimate Inventory – Fast & Secure</title>
+    <title>Premium Inventory | Scan · Manage · Invoice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { background: #f1f5f9; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-        .tab-active { background-color: #3b82f6; color: white; border-radius: 2rem; }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 10px 20px; border-radius: 40px; z-index: 1000; font-size: 14px; white-space: nowrap; pointer-events: none; }
-        input, select, textarea { font-size: 16px !important; }
-        .scanner-container { border-radius: 1rem; overflow: hidden; background: #000; position: relative; }
-        .scanner-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; pointer-events: none; z-index: 10; }
-        .product-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; margin-right: 10px; }
-        .inventory-card { transition: all 0.2s; }
-        .inventory-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        .product-form { background: white; max-width: 90%; width: 500px; max-height: 85vh; overflow-y: auto; border-radius: 1.5rem; padding: 1.5rem; }
-        .photo-preview { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; margin-top: 8px; }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { opacity: 0.5; }
-        /* Role-based hidden elements */
-        .role-admin-only, .role-manager-only { display: none; }
-        body[data-role="admin"] .role-admin-only { display: block; }
-        body[data-role="admin"] .role-manager-only { display: block; }
-        body[data-role="manager"] .role-manager-only { display: block; }
+        * { font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); }
+        .glass-card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15), 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .glass-panel {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 20px -6px rgba(0,0,0,0.1);
+        }
+        .tab-active {
+            background: linear-gradient(105deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293bcc;
+            backdrop-filter: blur(12px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 100px;
+            z-index: 2000;
+            font-size: 0.9rem;
+            font-weight: 500;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .input-modern {
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+            background: white;
+        }
+        .input-modern:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(105deg, #3b82f6, #2563eb);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px #3b82f680;
+        }
+        .scanner-container {
+            border-radius: 1.5rem;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+        }
+        .product-img {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 1rem;
+            background: #f1f5f9;
+        }
+        .inventory-card {
+            transition: all 0.2s ease;
+        }
+        .inventory-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px -12px rgba(0,0,0,0.2);
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .modal-content {
+            background: white;
+            max-width: 90%;
+            width: 560px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 2rem;
+            padding: 1.8rem;
+            box-shadow: 0 25px 40px -12px black;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
     </style>
 </head>
-<body id="appBody">
-<div id="loginContainer" class="max-w-md mx-auto mt-20 px-4">
-    <div class="bg-white rounded-2xl p-6 shadow-lg">
-        <h1 class="text-2xl font-bold text-center mb-6">📦 Inventory Login</h1>
-        <input type="email" id="loginEmail" placeholder="Email" class="w-full border rounded-xl p-3 mb-3">
-        <input type="password" id="loginPassword" placeholder="Password" class="w-full border rounded-xl p-3 mb-4">
-        <button id="doLoginBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Login</button>
-        <div id="loginError" class="text-red-600 text-center mt-3 text-sm"></div>
+<body class="antialiased">
+
+<!-- LOGIN CARD -->
+<div id="loginContainer" class="min-h-screen flex items-center justify-center px-4">
+    <div class="glass-card w-full max-w-md p-8 text-center transform transition-all">
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <i class="fas fa-boxes text-white text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800">Inventory Premium</h2>
+        <p class="text-gray-500 mt-1 mb-6">Secure access</p>
+        <input type="email" id="loginEmail" placeholder="Email address" class="input-modern w-full rounded-xl p-3 mb-3">
+        <input type="password" id="loginPassword" placeholder="Password" class="input-modern w-full rounded-xl p-3 mb-5">
+        <button id="doLoginBtn" class="btn-primary w-full text-white font-semibold py-3 rounded-xl">Sign in →</button>
+        <div id="loginError" class="text-red-500 text-sm mt-3"></div>
     </div>
 </div>
 
-<div id="appContainer" style="display:none;">
-    <div class="max-w-5xl mx-auto px-4 pt-5 pb-20">
-        <!-- Header -->
-        <div class="flex justify-between items-center bg-white p-3 rounded-2xl shadow-sm mb-5">
-            <h1 class="font-bold text-xl"><i class="fas fa-boxes text-blue-600"></i> Ultimate Inventory</h1>
-            <div class="flex items-center gap-2">
-                <span id="userRoleBadge" class="text-xs bg-gray-200 px-2 py-1 rounded-full"></span>
-                <button id="logoutBtn" class="text-red-500 text-sm"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-        </div>
-
-        <!-- Tabs (some will be hidden based on role) -->
-        <div class="flex bg-white rounded-2xl p-1 mb-6 sticky top-2 z-10 shadow overflow-x-auto">
-            <button data-tab="dashboard" class="tab-btn flex-1 py-2 rounded-xl text-sm whitespace-nowrap"><i class="fas fa-chart-line"></i> Stats</button>
-            <button data-tab="scan" class="tab-btn flex-1 py-2 rounded-xl text-sm whitespace-nowrap"><i class="fas fa-camera"></i> Scan</button>
-            <button data-tab="inventory" class="tab-btn flex-1 py-2 rounded-xl text-sm whitespace-nowrap"><i class="fas fa-archive"></i> Products</button>
-            <button data-tab="invoice" class="tab-btn flex-1 py-2 rounded-xl text-sm whitespace-nowrap"><i class="fas fa-receipt"></i> Invoice</button>
-            <button data-tab="history" class="tab-btn flex-1 py-2 rounded-xl text-sm whitespace-nowrap"><i class="fas fa-history"></i> History</button>
-            <button data-tab="workers" class="tab-btn role-admin-only flex-1 py-2 rounded-xl text-sm whitespace-nowrap"><i class="fas fa-users"></i> Workers</button>
-        </div>
-
-        <!-- Dashboard Tab -->
-        <div id="dashboardTab" class="tab-content space-y-4">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div class="bg-white p-4 rounded-2xl shadow"><p class="text-gray-500 text-xs">Total Products</p><p id="totalProducts" class="text-2xl font-bold">--</p></div>
-                <div class="bg-white p-4 rounded-2xl shadow"><p class="text-gray-500 text-xs">Low Stock</p><p id="lowStockCount" class="text-2xl font-bold text-red-600">--</p></div>
-                <div class="bg-white p-4 rounded-2xl shadow"><p class="text-gray-500 text-xs">📥 Today IN</p><p id="todayIn" class="text-xl font-bold">--</p></div>
-                <div class="bg-white p-4 rounded-2xl shadow"><p class="text-gray-500 text-xs">📤 Today OUT</p><p id="todayOut" class="text-xl font-bold">--</p></div>
-            </div>
-            <div class="bg-white rounded-2xl p-3 shadow"><h3 class="font-semibold mb-2">⚠️ Low Stock Alerts</h3><div id="lowStockList" class="divide-y"></div></div>
-            <div class="bg-white rounded-2xl p-3 shadow"><h3 class="font-semibold mb-2">📋 Recent Activity</h3><div id="recentTransactions" class="space-y-2 text-sm"></div></div>
-        </div>
-
-        <!-- Scan Tab -->
-        <div id="scanTab" class="tab-content hidden space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow space-y-4">
-                <div class="flex gap-2">
-                    <input type="text" id="barcodeInput" placeholder="Scan or type barcode" class="flex-1 border rounded-xl px-4 py-3">
-                    <button id="startScannerBtn" class="bg-blue-600 text-white px-4 rounded-xl"><i class="fas fa-camera"></i> Scan</button>
+<!-- MAIN APP (hidden until login) -->
+<div id="appContainer" style="display:none;" class="pb-20">
+    <div class="max-w-6xl mx-auto px-4 pt-6">
+        <!-- header with glass effect -->
+        <div class="glass-panel flex justify-between items-center p-3 mb-6 sticky top-3 z-20 backdrop-blur-md">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-md">
+                    <i class="fas fa-cubes text-white text-lg"></i>
                 </div>
-                <div id="qrScannerContainer" style="display:none;" class="scanner-container rounded-xl"></div>
-                <div id="productInfoCard" class="hidden bg-gray-50 p-3 rounded-xl">
-                    <p class="font-bold" id="scanProductName"></p>
-                    <p>Stock: <span id="scanCurrentStock"></span> units</p>
+                <h1 class="text-xl font-bold text-gray-800">StockFlow<span class="text-blue-600"> Pro</span></h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="userRoleBadge" class="text-xs font-medium bg-white/60 px-3 py-1 rounded-full text-gray-700"></span>
+                <button id="logoutBtn" class="text-gray-500 hover:text-red-500 transition"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- TABS (role based hidden via CSS) -->
+        <div class="glass-panel flex flex-wrap gap-1 p-1.5 mb-8 sticky top-20 z-10 backdrop-blur-sm">
+            <button data-tab="dashboard" class="tab-btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"><i class="fas fa-chart-line"></i><span>Insights</span></button>
+            <button data-tab="scan" class="tab-btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"><i class="fas fa-camera"></i><span>Scan</span></button>
+            <button data-tab="inventory" class="tab-btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"><i class="fas fa-archive"></i><span>Products</span></button>
+            <button data-tab="invoice" class="tab-btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"><i class="fas fa-receipt"></i><span>Invoice</span></button>
+            <button data-tab="history" class="tab-btn flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"><i class="fas fa-history"></i><span>History</span></button>
+            <button data-tab="workers" class="tab-btn role-admin-only flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all"><i class="fas fa-users"></i><span>Workers</span></button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboardTab" class="tab-content space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                <div class="glass-card p-5 text-center"><i class="fas fa-boxes text-blue-500 text-2xl mb-2"></i><p class="text-gray-500 text-xs">Total SKUs</p><p id="totalProducts" class="text-3xl font-bold">--</p></div>
+                <div class="glass-card p-5 text-center"><i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-2"></i><p class="text-gray-500 text-xs">Low Stock</p><p id="lowStockCount" class="text-3xl font-bold text-red-500">--</p></div>
+                <div class="glass-card p-5 text-center"><i class="fas fa-arrow-down text-green-500 text-2xl mb-2"></i><p class="text-gray-500 text-xs">Today IN</p><p id="todayIn" class="text-2xl font-bold">--</p></div>
+                <div class="glass-card p-5 text-center"><i class="fas fa-arrow-up text-red-400 text-2xl mb-2"></i><p class="text-gray-500 text-xs">Today OUT</p><p id="todayOut" class="text-2xl font-bold">--</p></div>
+            </div>
+            <div class="glass-panel p-5"><h3 class="font-semibold text-lg flex items-center gap-2"><i class="fas fa-bell text-amber-500"></i>Low stock alerts</h3><div id="lowStockList" class="divide-y divide-gray-200 mt-3"></div></div>
+            <div class="glass-panel p-5"><h3 class="font-semibold text-lg flex items-center gap-2"><i class="fas fa-clock text-blue-500"></i>Recent activity</h3><div id="recentTransactions" class="space-y-2 text-sm mt-3"></div></div>
+        </div>
+
+        <!-- SCAN TAB -->
+        <div id="scanTab" class="tab-content hidden space-y-6">
+            <div class="glass-panel p-6 space-y-5">
+                <div class="flex gap-3">
+                    <input type="text" id="barcodeInput" placeholder="Scan or type barcode" class="input-modern flex-1 rounded-xl p-3 text-lg">
+                    <button id="startScannerBtn" class="bg-gray-800 text-white px-5 rounded-xl hover:bg-gray-700 transition"><i class="fas fa-camera mr-1"></i> Scan</button>
+                </div>
+                <div id="qrScannerContainer" style="display:none;" class="scanner-container"></div>
+                <div id="productInfoCard" class="hidden bg-white/70 rounded-xl p-4 border border-blue-100">
+                    <p class="font-bold text-lg" id="scanProductName"></p>
+                    <p class="text-gray-600">Current stock: <span id="scanCurrentStock" class="font-mono font-bold"></span> units</p>
                 </div>
                 <div class="flex gap-3">
-                    <button id="typeInBtn" class="flex-1 py-2 rounded-xl bg-green-100 text-green-700">📥 Stock IN</button>
-                    <button id="typeOutBtn" class="flex-1 py-2 rounded-xl bg-red-100 text-red-700">🛒 Stock OUT</button>
+                    <button id="typeInBtn" class="flex-1 py-3 rounded-xl bg-green-100 text-green-700 font-medium border border-green-200 transition-all"><i class="fas fa-inbox mr-1"></i> Stock IN</button>
+                    <button id="typeOutBtn" class="flex-1 py-3 rounded-xl bg-red-100 text-red-700 font-medium border border-red-200 transition-all"><i class="fas fa-truck mr-1"></i> Stock OUT</button>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span>Quantity:</span>
-                    <div class="flex gap-2 bg-gray-100 rounded-full p-1">
-                        <button id="qtyMinus" class="w-10 h-10 rounded-full bg-white shadow">-</button>
-                        <input id="quantityInput" type="number" value="1" min="1" class="w-16 text-center bg-transparent text-lg">
-                        <button id="qtyPlus" class="w-10 h-10 rounded-full bg-white shadow">+</button>
+                <div class="flex justify-between items-center bg-white/50 p-3 rounded-xl">
+                    <span class="font-medium">Quantity</span>
+                    <div class="flex gap-3">
+                        <button id="qtyMinus" class="w-10 h-10 rounded-full bg-white shadow-md text-xl">−</button>
+                        <input id="quantityInput" type="number" value="1" min="1" class="w-20 text-center text-xl font-semibold bg-transparent">
+                        <button id="qtyPlus" class="w-10 h-10 rounded-full bg-white shadow-md text-xl">+</button>
                     </div>
                 </div>
-                <input type="text" id="notesInput" placeholder="Note (order # / reason)" class="w-full border rounded-xl p-2">
-                <button id="confirmBtn" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">✅ Confirm & Update Stock</button>
+                <input type="text" id="notesInput" placeholder="Reference / order #" class="input-modern w-full rounded-xl p-3">
+                <button id="confirmBtn" class="btn-primary w-full text-white font-bold py-3 rounded-xl text-lg">✓ Confirm & update stock</button>
             </div>
         </div>
 
-        <!-- Inventory Tab -->
-        <div id="inventoryTab" class="tab-content hidden space-y-3">
-            <input type="text" id="invSearch" placeholder="Search by name or barcode..." class="w-full border rounded-xl p-2">
-            <div id="inventoryList" class="space-y-2 max-h-[70vh] overflow-auto"></div>
+        <!-- PRODUCTS TAB -->
+        <div id="inventoryTab" class="tab-content hidden space-y-4">
+            <div class="glass-panel p-3 flex gap-2">
+                <i class="fas fa-search text-gray-400 self-center ml-2"></i>
+                <input type="text" id="invSearch" placeholder="Search by name or barcode..." class="input-modern w-full rounded-xl p-3 bg-transparent border-0 focus:ring-0">
+            </div>
+            <div id="inventoryList" class="space-y-3 max-h-[70vh] overflow-auto"></div>
         </div>
 
-        <!-- Invoice Tab -->
-        <div id="invoiceTab" class="tab-content hidden space-y-3">
-            <div class="bg-white rounded-2xl p-4 shadow">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="customerName" placeholder="Customer name" class="border rounded-xl p-2">
-                    <input type="text" id="customerPhone" placeholder="Phone" class="border rounded-xl p-2">
+        <!-- INVOICE TAB -->
+        <div id="invoiceTab" class="tab-content hidden space-y-5">
+            <div class="glass-panel p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="customerName" placeholder="Customer name" class="input-modern rounded-xl p-3">
+                    <input type="text" id="customerPhone" placeholder="Phone" class="input-modern rounded-xl p-3">
                 </div>
-                <div class="mt-3 flex gap-2">
-                    <input type="text" id="invBarcode" placeholder="Scan barcode" class="flex-1 border rounded-xl p-2">
-                    <button id="addToCartBtn" class="bg-blue-600 text-white px-4 rounded-xl">Add</button>
+                <div class="flex gap-2 mt-4">
+                    <input type="text" id="invBarcode" placeholder="Scan barcode" class="input-modern flex-1 rounded-xl p-3">
+                    <button id="addToCartBtn" class="bg-blue-600 text-white px-5 rounded-xl"><i class="fas fa-plus"></i> Add</button>
                 </div>
-                <div class="overflow-x-auto mt-3">
+                <div class="overflow-x-auto mt-5">
                     <table class="w-full text-sm">
-                        <thead><tr class="border-b"><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead>
+                        <thead class="border-b border-gray-200"><tr><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead>
                         <tbody id="cartItems"></tbody>
                     </table>
                 </div>
-                <div class="mt-3 space-y-2">
-                    <div>Subtotal: <span id="subtotal">0</span></div>
-                    <div>Discount: <input type="number" id="discount" value="0" step="any" class="border rounded p-1 w-24"></div>
-                    <div>Total: <span id="total">0</span></div>
-                    <div>Paid: <input type="number" id="paid" value="0" step="any" class="border rounded p-1 w-24"></div>
-                    <div>Due: <span id="due">0</span></div>
-                    <select id="paymentMethod" class="border rounded p-2 w-full"><option>cash</option><option>card</option><option>bank</option></select>
-                    <button id="saveInvoiceBtn" class="w-full bg-green-600 text-white py-2 rounded-xl font-bold">Save Invoice</button>
+                <div class="mt-5 space-y-3 bg-gray-50/50 p-4 rounded-xl">
+                    <div class="flex justify-between"><span>Subtotal</span><span id="subtotal">0</span></div>
+                    <div class="flex justify-between items-center"><span>Discount</span><input type="number" id="discount" value="0" step="any" class="input-modern w-28 text-right rounded-lg p-1"></div>
+                    <div class="flex justify-between font-bold text-lg"><span>Total</span><span id="total">0</span></div>
+                    <div class="flex justify-between items-center"><span>Paid</span><input type="number" id="paid" value="0" step="any" class="input-modern w-28 text-right rounded-lg p-1"></div>
+                    <div class="flex justify-between text-red-600"><span>Due</span><span id="due">0</span></div>
+                    <select id="paymentMethod" class="input-modern w-full rounded-xl p-2"><option>cash</option><option>card</option><option>bank transfer</option></select>
+                    <button id="saveInvoiceBtn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 rounded-xl font-bold">💾 Save Invoice</button>
                 </div>
             </div>
         </div>
 
-        <!-- Invoice History Tab -->
-        <div id="historyTab" class="tab-content hidden space-y-3">
-            <div class="bg-white rounded-2xl p-3 shadow overflow-x-auto">
+        <!-- INVOICE HISTORY -->
+        <div id="historyTab" class="tab-content hidden">
+            <div class="glass-panel p-4 overflow-x-auto">
                 <table class="w-full text-sm">
-                    <thead><tr><th>Invoice#</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
+                    <thead class="border-b"><tr><th>Invoice#</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th></tr></thead>
                     <tbody id="invoiceHistoryList"></tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Workers Tab (admin only) -->
-        <div id="workersTab" class="tab-content hidden space-y-3">
-            <div class="flex gap-2">
-                <input type="text" id="newWorkerName" placeholder="New worker name" class="flex-1 border rounded-xl p-2">
-                <button id="addWorkerBtn" class="bg-blue-600 text-white px-4 rounded-xl">Add</button>
+        <!-- WORKERS (admin only) -->
+        <div id="workersTab" class="tab-content hidden space-y-4">
+            <div class="glass-panel p-5 flex gap-3">
+                <input type="text" id="newWorkerName" placeholder="Worker name" class="input-modern flex-1 rounded-xl p-3">
+                <button id="addWorkerBtn" class="bg-blue-600 text-white px-5 rounded-xl"><i class="fas fa-user-plus"></i> Add</button>
             </div>
-            <div id="workersList" class="bg-white rounded-2xl divide-y"></div>
+            <div id="workersList" class="glass-panel divide-y divide-gray-200"></div>
         </div>
     </div>
 
-    <!-- Product Edit Modal -->
-    <div id="productModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white w-full max-w-2xl rounded-2xl p-5 max-h-[85vh] overflow-auto mx-4">
-            <div class="flex justify-between border-b pb-2"><h3 class="font-bold text-lg">Edit Product</h3><button id="closeModalBtn"><i class="fas fa-times text-gray-500"></i></button></div>
-            <input type="hidden" id="editBarcode">
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input type="text" id="editProductName" placeholder="Product Name" class="border rounded-lg p-2">
-                <input type="text" id="editCategory" placeholder="Category" class="border rounded-lg p-2">
-                <input type="text" id="editBrand" placeholder="Brand" class="border rounded-lg p-2">
-                <input type="text" id="editSize" placeholder="Size" class="border rounded-lg p-2">
-                <textarea id="editDescription" placeholder="Description" rows="2" class="border rounded-lg p-2 md:col-span-2"></textarea>
-                <input type="number" id="editWholesale" placeholder="Wholesale Price" class="border rounded-lg p-2">
-                <input type="number" id="editRetail" placeholder="Retail Price" class="border rounded-lg p-2">
-                <input type="number" id="editMinAlert" placeholder="Min Stock Alert" class="border rounded-lg p-2">
-                <select id="editStatus" class="border rounded-lg p-2">
-                    <option value="active">Active</option><option value="inactive">Inactive</option><option value="out_of_stock">Out of Stock</option>
-                </select>
-            </div>
-            <div class="mt-4">
-                <label class="block text-sm font-medium mb-1">Image URL</label>
-                <input type="text" id="editImageUrl" placeholder="https://..." class="w-full border rounded-lg p-2">
-                <button id="editUploadPhotoBtn" class="mt-2 bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-sm"><i class="fas fa-camera"></i> Take New Photo</button>
-            </div>
-            <div class="mt-4"><button id="saveProductBtn" class="w-full bg-green-600 text-white py-2 rounded-xl font-bold">Save Changes</button></div>
-            <hr class="my-3"><h4 class="font-semibold">Transaction History</h4><div id="historyList" class="text-xs space-y-2 max-h-40 overflow-auto mt-2"></div>
+    <!-- modals (edit product, new product) -->
+    <div id="productModal" class="modal-overlay hidden">
+        <div class="modal-content"><div class="flex justify-between border-b pb-2"><h3 class="font-bold text-xl">✏️ Edit product</h3><button id="closeModalBtn"><i class="fas fa-times text-gray-400 hover:text-gray-700"></i></button></div>
+        <input type="hidden" id="editBarcode">
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input type="text" id="editProductName" placeholder="Product name" class="input-modern rounded-xl p-2"><input type="text" id="editCategory" placeholder="Category" class="input-modern rounded-xl p-2">
+            <input type="text" id="editBrand" placeholder="Brand" class="input-modern rounded-xl p-2"><input type="text" id="editSize" placeholder="Size" class="input-modern rounded-xl p-2">
+            <textarea id="editDescription" placeholder="Description" rows="2" class="input-modern rounded-xl p-2 col-span-2"></textarea>
+            <input type="number" id="editWholesale" placeholder="Wholesale price" class="input-modern rounded-xl p-2"><input type="number" id="editRetail" placeholder="Retail price" class="input-modern rounded-xl p-2">
+            <input type="number" id="editMinAlert" placeholder="Min stock alert" class="input-modern rounded-xl p-2"><select id="editStatus" class="input-modern rounded-xl p-2"><option>active</option><option>inactive</option><option>out_of_stock</option></select>
+        </div>
+        <div class="mt-3"><label class="block text-sm font-medium">Image URL</label><input type="text" id="editImageUrl" class="input-modern w-full rounded-xl p-2"><button id="editUploadPhotoBtn" class="mt-2 bg-gray-100 px-4 py-1 rounded-full text-sm"><i class="fas fa-camera"></i> Take photo</button></div>
+        <button id="saveProductBtn" class="btn-primary w-full mt-5 text-white font-bold py-2 rounded-xl">Save changes</button>
+        <hr class="my-3"><h4 class="font-semibold">Stock history</h4><div id="historyList" class="text-xs space-y-2 max-h-40 overflow-auto mt-2"></div>
         </div>
     </div>
 
-    <!-- New Product Modal (appears on first IN scan) -->
-    <div id="newProductModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-5 w-full max-w-md max-h-[85vh] overflow-auto">
-            <h2 class="text-xl font-bold mb-3">New Product Details</h2>
-            <input type="text" id="newName" placeholder="Product Name *" class="w-full border rounded-lg p-2 mb-2">
-            <input type="text" id="newCategory" placeholder="Category" class="w-full border rounded-lg p-2 mb-2">
-            <input type="text" id="newBrand" placeholder="Brand" class="w-full border rounded-lg p-2 mb-2">
-            <input type="text" id="newSize" placeholder="Size" class="w-full border rounded-lg p-2 mb-2">
-            <textarea id="newDesc" placeholder="Description" class="w-full border rounded-lg p-2 mb-2"></textarea>
-            <input type="number" id="newWholesale" placeholder="Wholesale Price" class="w-full border rounded-lg p-2 mb-2">
-            <input type="number" id="newRetail" placeholder="Retail Price" class="w-full border rounded-lg p-2 mb-2">
-            <input type="number" id="newMinAlert" placeholder="Min Stock Alert" class="w-full border rounded-lg p-2 mb-2">
-            <div class="flex gap-2">
-                <button id="newTakePhoto" class="bg-gray-200 px-4 py-1 rounded-full text-sm"><i class="fas fa-camera"></i> Take Photo</button>
-                <span id="newPhotoStatus" class="text-xs text-gray-500 self-center">No photo</span>
-            </div>
-            <img id="newPreview" class="photo-preview hidden mt-2">
-            <input type="hidden" id="newImageUrl">
-            <div class="flex gap-3 mt-4">
-                <button id="saveNewBtn" class="flex-1 bg-green-600 text-white py-2 rounded-xl font-bold">Save Product</button>
-                <button id="cancelNewBtn" class="flex-1 bg-gray-300 py-2 rounded-xl">Cancel</button>
-            </div>
+    <div id="newProductModal" class="modal-overlay hidden">
+        <div class="modal-content"><h2 class="text-xl font-bold mb-3">➕ New product</h2>
+        <input type="text" id="newName" placeholder="Product name *" class="input-modern w-full rounded-xl p-2 mb-2">
+        <input type="text" id="newCategory" placeholder="Category" class="input-modern w-full rounded-xl p-2 mb-2"><input type="text" id="newBrand" placeholder="Brand" class="input-modern w-full rounded-xl p-2 mb-2">
+        <input type="text" id="newSize" placeholder="Size" class="input-modern w-full rounded-xl p-2 mb-2"><textarea id="newDesc" placeholder="Description" rows="2" class="input-modern w-full rounded-xl p-2 mb-2"></textarea>
+        <input type="number" id="newWholesale" placeholder="Wholesale price" class="input-modern w-full rounded-xl p-2 mb-2"><input type="number" id="newRetail" placeholder="Retail price" class="input-modern w-full rounded-xl p-2 mb-2">
+        <input type="number" id="newMinAlert" placeholder="Min stock alert" class="input-modern w-full rounded-xl p-2 mb-3">
+        <div class="flex gap-2"><button id="newTakePhoto" class="bg-gray-100 px-4 py-1 rounded-full text-sm"><i class="fas fa-camera"></i> Take photo</button><span id="newPhotoStatus" class="text-xs text-gray-500 self-center">No photo</span></div>
+        <img id="newPreview" class="photo-preview hidden mt-2 w-20 h-20 object-cover rounded-xl"><input type="hidden" id="newImageUrl">
+        <div class="flex gap-3 mt-5"><button id="saveNewBtn" class="flex-1 bg-green-600 text-white py-2 rounded-xl font-bold">Save product</button><button id="cancelNewBtn" class="flex-1 bg-gray-200 py-2 rounded-xl">Cancel</button></div>
         </div>
     </div>
 </div>
 
 <script>
-    // ==================== CONFIGURATION ====================
-    const API_URL = "https://script.google.com/macros/s/AKfycbwRbZWFnku1MsCY8upgJ1wded0Wr_tc_0aXEVuZC1uNx3wNQ-hjehXy-DCWAqDJEw7xRw/exec"; // REPLACE WITH YOUR URL
-    const IMGBB_API_KEY = "31c5a3faf2dad607b733f9a3a34500bd"; // YOUR IMGBB KEY
+    // ==================== CONFIGURATION (CHANGE THESE) ====================
+    const API_URL = "https://script.google.com/macros/s/AKfycbwRbZWFnku1MsCY8upgJ1wded0Wr_tc_0aXEVuZC1uNx3wNQ-hjehXy-DCWAqDJEw7xRw/exec";  // YOUR APPS SCRIPT URL
+    const IMGBB_API_KEY = "31c5a3faf2dad607b733f9a3a34500bd";     // YOUR IMGBB KEY
 
-    let currentUser = null;      // { email, role, fullName }
+    let currentUser = null;
     let currentPassword = null;
     let currentProduct = null;
     let transactionType = "OUT";
@@ -223,7 +295,7 @@
     let pendingNewProduct = null;
     let cart = [];
 
-    // ==================== UTILS ====================
+    // ========== API & HELPERS ==========
     async function apiCall(action, extra = {}) {
         const payload = new URLSearchParams();
         payload.append("action", action);
@@ -238,13 +310,12 @@
         const resp = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: payload });
         const text = await resp.text();
         try { const json = JSON.parse(text); if (!json.success) throw new Error(json.error); return json; }
-        catch(e) { throw new Error(text.substring(0,100)); }
+        catch(e) { throw new Error(text.substring(0,120)); }
     }
 
     async function uploadToImgbb(file) {
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+        const fd = new FormData(); fd.append('image', file);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: fd });
         const data = await res.json();
         if (!data.success) throw new Error(data.error?.message);
         return data.data.url;
@@ -253,9 +324,7 @@
     async function takePhoto() {
         return new Promise((resolve) => {
             const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.capture = 'environment';
+            input.type = 'file'; input.accept = 'image/*'; input.capture = 'environment';
             input.onchange = async (e) => {
                 if (e.target.files && e.target.files[0]) {
                     showToast("Uploading...");
@@ -268,45 +337,31 @@
     }
 
     function showToast(msg, isErr = false) {
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.innerText = msg;
-        if (isErr) t.style.background = '#b91c1c';
-        document.body.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
+        const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
+        if (isErr) t.style.background = '#b91c1ccc';
+        document.body.appendChild(t); setTimeout(() => t.remove(), 2800);
     }
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
 
-    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
-
-    // ==================== SCANNER ====================
+    // ========== SCANNER ==========
     async function startCamera() {
-        if (scannerInstance) { await stopScanner(); }
+        if (scannerInstance) await stopScanner();
         const container = document.getElementById('qrScannerContainer');
         container.style.display = 'block';
         container.innerHTML = '<div id="reader" style="width:100%"></div><div class="scanner-overlay">Camera starting...</div>';
-        const html5QrCode = new Html5Qrcode("reader");
-        scannerInstance = html5QrCode;
+        scannerInstance = new Html5Qrcode("reader");
         try {
-            await html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
-                (decodedText) => {
-                    document.getElementById('barcodeInput').value = decodedText;
-                    lookupBarcode(decodedText);
-                    stopScanner();
-                },
-                () => {}
-            );
+            await scannerInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 300, height: 300 }, aspectRatio: 1.0 },
+                (decoded) => { document.getElementById('barcodeInput').value = decoded; lookupBarcode(decoded); stopScanner(); },
+                () => {});
             container.querySelector('.scanner-overlay')?.remove();
-        } catch(err) { showToast("Camera error", true); container.style.display = 'none'; scannerInstance = null; }
+        } catch(e) { showToast("Camera error", true); container.style.display = 'none'; scannerInstance = null; }
     }
     async function stopScanner() {
         if (scannerInstance) { try { await scannerInstance.stop(); await scannerInstance.clear(); } catch(e){} scannerInstance = null; }
-        document.getElementById('qrScannerContainer').style.display = 'none';
-        document.getElementById('qrScannerContainer').innerHTML = '';
+        const c = document.getElementById('qrScannerContainer'); c.style.display = 'none'; c.innerHTML = '';
     }
 
-    // ==================== CORE INVENTORY ====================
     async function lookupBarcode(barcode) {
         if (!barcode) return;
         try {
@@ -316,11 +371,7 @@
                 document.getElementById('scanProductName').innerText = currentProduct.name;
                 document.getElementById('scanCurrentStock').innerText = currentProduct.stock;
                 document.getElementById('productInfoCard').classList.remove('hidden');
-            } else {
-                currentProduct = null;
-                document.getElementById('productInfoCard').classList.add('hidden');
-                showToast("New product – fill details after Confirm", false);
-            }
+            } else { currentProduct = null; document.getElementById('productInfoCard').classList.add('hidden'); showToast("New product – fill details after Confirm", false); }
         } catch(e) { currentProduct = null; document.getElementById('productInfoCard').classList.add('hidden'); }
     }
 
@@ -336,19 +387,14 @@
         if (!currentProduct && transactionType === 'IN') {
             pendingNewProduct = { barcode, qty, worker, notes };
             document.getElementById('newProductModal').classList.remove('hidden');
-        } else if (!currentProduct && transactionType === 'OUT') {
-            showToast("Product not found", true);
-        } else if (currentProduct) {
+        } else if (!currentProduct && transactionType === 'OUT') showToast("Product not found", true);
+        else if (currentProduct) {
             await apiCall("updateStock", { sku: currentProduct.sku, change: transactionType === 'IN' ? qty : -qty, reason: notes, product_id: currentProduct.id });
             await apiCall("logTransaction", { worker, barcode, type: transactionType, qty, notes });
-            showToast(`${transactionType} ${qty} → stock updated`);
-            document.getElementById('barcodeInput').value = '';
-            document.getElementById('quantityInput').value = '1';
-            document.getElementById('notesInput').value = '';
-            document.getElementById('productInfoCard').classList.add('hidden');
-            currentProduct = null;
-            refreshDashboard();
-            loadInventory();
+            showToast(`${transactionType} ${qty} → updated`);
+            document.getElementById('barcodeInput').value = ''; document.getElementById('quantityInput').value = '1'; document.getElementById('notesInput').value = '';
+            document.getElementById('productInfoCard').classList.add('hidden'); currentProduct = null;
+            refreshDashboard(); loadInventory();
         }
     }
 
@@ -356,71 +402,56 @@
         const name = document.getElementById('newName').value.trim();
         if (!name) { showToast("Product name required", true); return; }
         const data = {
-            sku: pendingNewProduct.barcode,
-            name: name,
-            image_url: document.getElementById('newImageUrl').value,
-            brand: document.getElementById('newBrand').value,
-            category: document.getElementById('newCategory').value,
-            subcategory: document.getElementById('newSize').value,
-            barcode: pendingNewProduct.barcode,
-            purchase_price: 0,
-            selling_price: parseFloat(document.getElementById('newRetail').value) || 0,
+            sku: pendingNewProduct.barcode, name, image_url: document.getElementById('newImageUrl').value,
+            brand: document.getElementById('newBrand').value, category: document.getElementById('newCategory').value,
+            subcategory: document.getElementById('newSize').value, barcode: pendingNewProduct.barcode,
+            purchase_price: 0, selling_price: parseFloat(document.getElementById('newRetail').value) || 0,
             wholesale_price: parseFloat(document.getElementById('newWholesale').value) || 0,
-            stock: pendingNewProduct.qty,
-            min_stock: parseInt(document.getElementById('newMinAlert').value) || 0,
-            supplier: "",
-            status: "active",
-            notes: document.getElementById('newDesc').value
+            stock: pendingNewProduct.qty, min_stock: parseInt(document.getElementById('newMinAlert').value) || 0,
+            supplier: "", status: "active", notes: document.getElementById('newDesc').value
         };
         await apiCall("addProduct", data);
         await apiCall("updateStock", { sku: pendingNewProduct.barcode, change: pendingNewProduct.qty, reason: "Initial stock" });
         await apiCall("logTransaction", { worker: pendingNewProduct.worker, barcode: pendingNewProduct.barcode, type: "IN", qty: pendingNewProduct.qty, notes: pendingNewProduct.notes });
         showToast(`Product "${name}" added`);
         document.getElementById('newProductModal').classList.add('hidden');
-        refreshDashboard();
-        loadInventory();
-        document.getElementById('barcodeInput').value = '';
-        document.getElementById('quantityInput').value = '1';
-        document.getElementById('notesInput').value = '';
-        document.getElementById('productInfoCard').classList.add('hidden');
-        currentProduct = null;
+        refreshDashboard(); loadInventory();
+        document.getElementById('barcodeInput').value = ''; document.getElementById('quantityInput').value = '1'; document.getElementById('notesInput').value = '';
+        document.getElementById('productInfoCard').classList.add('hidden'); currentProduct = null;
     }
 
+    // ========== DASHBOARD & PRODUCTS ==========
     async function refreshDashboard() {
         try {
             const stats = await apiCall("getDashboardStats");
             document.getElementById('totalProducts').innerText = stats.total_products || 0;
             document.getElementById('lowStockCount').innerText = stats.low_stock_count || 0;
-            // For demo, today IN/OUT placeholder – integrate with your backend if needed
-            document.getElementById('todayIn').innerText = "0";
+            document.getElementById('todayIn').innerText = "0"; // optional: add real endpoint
             document.getElementById('todayOut').innerText = "0";
             const low = await apiCall("getLowStock");
-            const lowHtml = low.low_stock?.map(p => `<div class="py-2 flex justify-between"><span>${escapeHtml(p.name)}</span><span class="text-red-600">${p.stock}/${p.min}</span></div>`).join('') || '<div class="text-gray-400">✅ All good</div>';
+            const lowHtml = low.low_stock?.map(p => `<div class="py-2 flex justify-between"><span>${escapeHtml(p.name)}</span><span class="text-red-500 font-medium">${p.stock}/${p.min}</span></div>`).join('') || '<div class="text-gray-400">All good</div>';
             document.getElementById('lowStockList').innerHTML = lowHtml;
-            // Recent transactions placeholder
-            document.getElementById('recentTransactions').innerHTML = '<div class="text-gray-400">No recent activity</div>';
+            document.getElementById('recentTransactions').innerHTML = '<div class="text-gray-400">No recent activity (API ready)</div>';
         } catch(e) { console.error(e); }
     }
 
     async function loadInventory(search = '') {
-        try {
-            const res = await apiCall("getProducts");
-            let products = res.products || [];
-            if (search) products = products.filter(p => p.name.toLowerCase().includes(search) || p.barcode.includes(search));
-            const container = document.getElementById('inventoryList');
-            if (!products.length) { container.innerHTML = '<div class="bg-white p-8 text-center text-gray-400 rounded-2xl">No products</div>'; return; }
-            const canEdit = (currentUser.role === 'admin' || currentUser.role === 'manager');
-            container.innerHTML = products.map(p => `
-                <div class="bg-white p-3 rounded-xl shadow-sm flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-1">
-                        ${p.image_url ? `<img src="${p.image_url}" class="product-img" onerror="this.style.display='none'">` : ''}
-                        <div><p class="font-semibold">${escapeHtml(p.name)}</p><p class="text-xs text-gray-500">${p.barcode} | Stock: ${p.stock} | ${p.selling_price}৳</p></div>
-                    </div>
-                    ${canEdit ? `<button class="edit-product-btn bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-sm" data-sku="${p.sku}">Edit</button>` : ''}
+        const res = await apiCall("getProducts");
+        let products = res.products || [];
+        if (search) products = products.filter(p => p.name.toLowerCase().includes(search) || p.barcode.includes(search));
+        const container = document.getElementById('inventoryList');
+        if (!products.length) { container.innerHTML = '<div class="text-center p-8 text-gray-400">No products found</div>'; return; }
+        const canEdit = (currentUser.role === 'admin' || currentUser.role === 'manager');
+        container.innerHTML = products.map(p => `
+            <div class="glass-card p-4 inventory-card flex justify-between items-center">
+                <div class="flex gap-3 items-center">
+                    ${p.image_url ? `<img src="${p.image_url}" class="product-img" onerror="this.style.display='none'">` : ''}
+                    <div><p class="font-semibold">${escapeHtml(p.name)}</p><p class="text-xs text-gray-500">${p.barcode} · stock ${p.stock} · ${p.selling_price}৳</p></div>
                 </div>
-            `).join('');
-            document.querySelectorAll('.edit-product-btn').forEach(btn => btn.onclick = () => openEditModal(btn.dataset.sku));
-        } catch(e) { console.error(e); }
+                ${canEdit ? `<button class="edit-product-btn text-blue-600 text-sm font-medium bg-blue-50 px-3 py-1.5 rounded-full" data-sku="${p.sku}">Edit</button>` : ''}
+            </div>
+        `).join('');
+        document.querySelectorAll('.edit-product-btn').forEach(btn => btn.onclick = () => openEditModal(btn.dataset.sku));
     }
 
     async function openEditModal(sku) {
@@ -439,68 +470,38 @@
         document.getElementById('editStatus').value = p.status;
         document.getElementById('editImageUrl').value = p.image_url || '';
         document.getElementById('productModal').classList.remove('hidden');
-        // fetch product history if endpoint exists
-        document.getElementById('historyList').innerHTML = '<div>Loading...</div>';
+        document.getElementById('historyList').innerHTML = '<div>Loading history...</div>';
     }
 
     async function saveProductEdit() {
         const sku = document.getElementById('editBarcode').value;
         const updates = {
-            sku: sku,
-            name: document.getElementById('editProductName').value,
-            category: document.getElementById('editCategory').value,
-            brand: document.getElementById('editBrand').value,
-            subcategory: document.getElementById('editSize').value,
-            notes: document.getElementById('editDescription').value,
-            wholesale_price: parseFloat(document.getElementById('editWholesale').value) || 0,
-            selling_price: parseFloat(document.getElementById('editRetail').value) || 0,
-            min_stock: parseInt(document.getElementById('editMinAlert').value) || 0,
-            status: document.getElementById('editStatus').value,
-            image_url: document.getElementById('editImageUrl').value
+            sku, name: document.getElementById('editProductName').value, category: document.getElementById('editCategory').value,
+            brand: document.getElementById('editBrand').value, subcategory: document.getElementById('editSize').value,
+            notes: document.getElementById('editDescription').value, wholesale_price: parseFloat(document.getElementById('editWholesale').value) || 0,
+            selling_price: parseFloat(document.getElementById('editRetail').value) || 0, min_stock: parseInt(document.getElementById('editMinAlert').value) || 0,
+            status: document.getElementById('editStatus').value, image_url: document.getElementById('editImageUrl').value
         };
         await apiCall("updateProduct", updates);
-        showToast("Product updated");
-        document.getElementById('productModal').classList.add('hidden');
-        loadInventory();
-        refreshDashboard();
+        showToast("Product updated"); document.getElementById('productModal').classList.add('hidden');
+        loadInventory(); refreshDashboard();
     }
 
-    async function editTakePhoto() {
-        const url = await takePhoto();
-        if (url) document.getElementById('editImageUrl').value = url;
-    }
+    async function editTakePhoto() { const url = await takePhoto(); if (url) document.getElementById('editImageUrl').value = url; }
+    async function newTakePhoto() { const url = await takePhoto(); if (url) { document.getElementById('newImageUrl').value = url; document.getElementById('newPreview').src = url; document.getElementById('newPreview').classList.remove('hidden'); document.getElementById('newPhotoStatus').innerText = "Photo taken"; } }
 
-    async function newTakePhoto() {
-        const url = await takePhoto();
-        if (url) {
-            document.getElementById('newImageUrl').value = url;
-            document.getElementById('newPreview').src = url;
-            document.getElementById('newPreview').classList.remove('hidden');
-            document.getElementById('newPhotoStatus').innerText = "Photo taken";
-        }
-    }
-
-    // ==================== WORKERS (admin only) ====================
+    // WORKERS
     async function loadWorkers() {
-        // Workers stored in a separate sheet; for demo we use a static list.
-        // You can replace with an API call to getWorkers if you implement it.
-        const workers = ["John", "Jane", "Mike"];
+        const workers = ["Emma Watson", "James Carter", "Lisa Roy"];
         const sel = document.getElementById('workerSelect');
         const old = sel.value;
-        sel.innerHTML = '<option value="">-- Select Worker --</option>';
+        sel.innerHTML = '<option value="">-- Select worker --</option>';
         workers.forEach(w => { const opt = document.createElement('option'); opt.value = w; opt.innerText = w; if (old === w) opt.selected = true; sel.appendChild(opt); });
-        document.getElementById('workersList').innerHTML = workers.map(w => `<div class="p-3 border-b"><i class="fas fa-user mr-2"></i>${w}</div>`).join('');
+        document.getElementById('workersList').innerHTML = workers.map(w => `<div class="p-4 flex justify-between"><span><i class="fas fa-user-circle text-blue-500 mr-2"></i>${w}</span><span class="text-green-600 text-sm">active</span></div>`).join('');
     }
+    async function addWorker() { const name = document.getElementById('newWorkerName').value.trim(); if (!name) return; showToast("Worker added (demo)"); document.getElementById('newWorkerName').value = ''; loadWorkers(); }
 
-    async function addWorker() {
-        const name = document.getElementById('newWorkerName').value.trim();
-        if (!name) return;
-        showToast("Worker added (demo)");
-        document.getElementById('newWorkerName').value = '';
-        loadWorkers();
-    }
-
-    // ==================== INVOICE ====================
+    // INVOICE
     async function addToCart() {
         const barcode = document.getElementById('invBarcode').value.trim();
         if (!barcode) return;
@@ -508,41 +509,27 @@
         if (!res.success) { showToast("Product not found", true); return; }
         const p = res.product;
         const existing = cart.find(i => i.sku === p.sku);
-        if (existing) existing.qty++;
-        else cart.push({ sku: p.sku, name: p.name, price: p.selling_price, qty: 1 });
-        renderCart();
-        document.getElementById('invBarcode').value = '';
+        if (existing) existing.qty++; else cart.push({ sku: p.sku, name: p.name, price: p.selling_price, qty: 1 });
+        renderCart(); document.getElementById('invBarcode').value = '';
     }
-
     function renderCart() {
         let html = '', subtotal = 0;
         cart.forEach((item, idx) => {
-            const total = item.qty * item.price;
-            subtotal += total;
-            html += `<tr>
-                <td>${escapeHtml(item.name)}</td>
-                <td><input type="number" value="${item.qty}" data-idx="${idx}" class="cartQty w-16 border rounded p-1"></td>
-                <td>${item.price}</td>
-                <td>${total}</td>
-                <td><button class="removeCart text-red-500" data-idx="${idx}">✖</button></td>
-            </tr>`;
+            const total = item.qty * item.price; subtotal += total;
+            html += `<tr><td>${escapeHtml(item.name)}</td><td><input type="number" value="${item.qty}" data-idx="${idx}" class="cartQty w-20 border rounded p-1 text-center"></td><td>${item.price}</td><td>${total}</td><td><button class="removeCart text-red-400" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></td></tr>`;
         });
         document.getElementById('cartItems').innerHTML = html;
-        document.getElementById('subtotal').innerText = subtotal;
-        updateTotals();
+        document.getElementById('subtotal').innerText = subtotal; updateTotals();
         document.querySelectorAll('.cartQty').forEach(inp => inp.onchange = (e) => { const idx = e.target.dataset.idx; cart[idx].qty = parseInt(e.target.value); renderCart(); });
         document.querySelectorAll('.removeCart').forEach(btn => btn.onclick = (e) => { const idx = btn.dataset.idx; cart.splice(idx,1); renderCart(); });
     }
-
     function updateTotals() {
         const subtotal = parseFloat(document.getElementById('subtotal').innerText);
         const discount = parseFloat(document.getElementById('discount').value) || 0;
         const total = subtotal - discount;
         const paid = parseFloat(document.getElementById('paid').value) || 0;
-        document.getElementById('total').innerText = total;
-        document.getElementById('due').innerText = total - paid;
+        document.getElementById('total').innerText = total; document.getElementById('due').innerText = total - paid;
     }
-
     async function saveInvoice() {
         if (!cart.length) { showToast("Cart empty", true); return; }
         const customer = document.getElementById('customerName').value || "Walk-in";
@@ -556,65 +543,35 @@
         if (res.success) { showToast(`Invoice ${res.invoice_no} created`); cart = []; renderCart(); document.getElementById('customerName').value = ''; document.getElementById('customerPhone').value = ''; document.getElementById('discount').value = '0'; document.getElementById('paid').value = '0'; updateTotals(); refreshDashboard(); loadInventory(); }
         else showToast(res.error, true);
     }
-
     async function loadInvoiceHistory() {
         const res = await apiCall("getInvoices");
         if (!res.success) return;
         let html = '';
-        res.invoices.forEach(inv => { html += `<tr><td>${inv.invoice_id}</td><td>${escapeHtml(inv.customer_name)}</td><td>${new Date(inv.date).toLocaleDateString()}</td><td>${inv.total}</td><td>${inv.status}</td></tr>`; });
+        res.invoices.forEach(inv => html += `<tr><td class="py-2">${inv.invoice_id}</td><td>${escapeHtml(inv.customer_name)}</td><td>${new Date(inv.date).toLocaleDateString()}</td><td>${inv.total}</td><td><span class="px-2 py-0.5 rounded-full text-xs ${inv.status==='paid'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700'}">${inv.status}</span></td></tr>`);
         document.getElementById('invoiceHistoryList').innerHTML = html;
     }
 
-    // ==================== LOGIN & ROLE ====================
+    // LOGIN & ROLE
     async function login(email, password) {
         try {
             const res = await apiCall("getUserInfo", { email, password });
             if (res.success && res.user) {
-                currentUser = res.user;
-                currentPassword = password;
-                document.getElementById('appBody').setAttribute('data-role', currentUser.role);
+                currentUser = res.user; currentPassword = password;
+                document.getElementById('appBody')?.setAttribute('data-role', currentUser.role);
                 document.getElementById('userRoleBadge').innerText = currentUser.role.toUpperCase();
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
-                // Apply role-based UI visibility
-                if (currentUser.role === 'admin') {
-                    document.querySelectorAll('.role-admin-only').forEach(el => el.style.display = 'block');
-                } else if (currentUser.role === 'manager') {
-                    document.querySelectorAll('.role-admin-only').forEach(el => el.style.display = 'none');
-                    document.querySelectorAll('.role-manager-only').forEach(el => el.style.display = 'block');
-                } else { // worker
-                    document.querySelectorAll('.role-admin-only, .role-manager-only').forEach(el => el.style.display = 'none');
-                }
-                // Initialize data
-                refreshDashboard();
-                loadInventory();
-                loadWorkers();
+                if (currentUser.role !== 'admin') document.querySelectorAll('.role-admin-only').forEach(el => el.style.display = 'none');
+                if (currentUser.role === 'worker') document.querySelectorAll('.role-manager-only, .role-admin-only').forEach(el => el.style.display = 'none');
+                refreshDashboard(); loadInventory(); loadWorkers();
                 document.querySelector('.tab-btn[data-tab="dashboard"]').click();
-            } else {
-                document.getElementById('loginError').innerText = "Invalid credentials";
-            }
-        } catch(err) {
-            document.getElementById('loginError').innerText = err.message;
-        }
+            } else document.getElementById('loginError').innerText = "Invalid credentials";
+        } catch(err) { document.getElementById('loginError').innerText = err.message; }
     }
+    function logout() { currentUser = null; currentPassword = null; stopScanner(); document.getElementById('loginContainer').style.display = 'block'; document.getElementById('appContainer').style.display = 'none'; }
 
-    function logout() {
-        currentUser = null;
-        currentPassword = null;
-        document.getElementById('loginContainer').style.display = 'block';
-        document.getElementById('appContainer').style.display = 'none';
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('loginError').innerText = '';
-        stopScanner();
-    }
-
-    // ==================== EVENT LISTENERS ====================
-    document.getElementById('doLoginBtn').onclick = () => {
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        login(email, password);
-    };
+    // EVENT BINDINGS
+    document.getElementById('doLoginBtn').onclick = () => login(document.getElementById('loginEmail').value.trim(), document.getElementById('loginPassword').value);
     document.getElementById('logoutBtn').onclick = logout;
     document.getElementById('startScannerBtn').onclick = startCamera;
     document.getElementById('typeInBtn').onclick = () => { transactionType = "IN"; document.getElementById('typeInBtn').classList.add('bg-green-200'); document.getElementById('typeOutBtn').classList.remove('bg-red-200'); };
@@ -629,20 +586,17 @@
     document.getElementById('editUploadPhotoBtn').onclick = editTakePhoto;
     document.getElementById('addToCartBtn').onclick = addToCart;
     document.getElementById('saveInvoiceBtn').onclick = saveInvoice;
-    document.getElementById('discount').addEventListener('input', updateTotals);
-    document.getElementById('paid').addEventListener('input', updateTotals);
-    document.getElementById('saveNewBtn').onclick = saveNewProduct;
-    document.getElementById('cancelNewBtn').onclick = () => document.getElementById('newProductModal').classList.add('hidden');
+    document.getElementById('discount').addEventListener('input', updateTotals); document.getElementById('paid').addEventListener('input', updateTotals);
+    document.getElementById('saveNewBtn').onclick = saveNewProduct; document.getElementById('cancelNewBtn').onclick = () => document.getElementById('newProductModal').classList.add('hidden');
     document.getElementById('newTakePhoto').onclick = newTakePhoto;
 
-    // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = () => {
             if (btn.dataset.tab !== 'scan') stopScanner();
             document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
             document.getElementById(btn.dataset.tab + 'Tab').classList.remove('hidden');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'bg-blue-600', 'text-white'));
-            btn.classList.add('tab-active', 'bg-blue-600', 'text-white');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            btn.classList.add('tab-active');
             if (btn.dataset.tab === 'dashboard') refreshDashboard();
             if (btn.dataset.tab === 'inventory') loadInventory();
             if (btn.dataset.tab === 'workers') loadWorkers();
