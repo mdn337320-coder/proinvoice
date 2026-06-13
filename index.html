@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Inventory System</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            margin: 0;
+            background: #f1f5f9;
+        }
+        /* Login page */
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .login-container h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .error {
+            color: #dc2626;
+            margin-top: 10px;
+            text-align: center;
+        }
+        /* App layout */
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1.5rem;
+        }
+        .sidebar h3 {
+            color: white;
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin: 12px 0;
+        }
+        .sidebar a {
+            color: #cbd5e1;
+            text-decoration: none;
+            display: block;
+            padding: 8px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: #1e293b;
+            color: white;
+        }
+        .content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #f8fafc;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 4px;
+        }
+        button.danger {
+            background: #dc2626;
+        }
+        button.secondary {
+            background: #475569;
+        }
+        input, select, textarea {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        img.preview {
+            max-width: 100px;
+            margin-top: 8px;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            .stats-grid {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+    // -------------------- CONFIGURATION --------------------
+    const API_URL = "https://script.google.com/macros/s/AKfycbzlNRqGVSSOumkgvfON059a2LGgspO9Fe7xXtUOtO1aVeANr7ZrDHsESwkDmT8h9LPKIA/exec";
+    let currentUser = null;         // stores { email, role, fullName, permissions }
+    let currentView = "login";      // login, dashboard, products, invoices, invoiceHistory, customers, stockMovements, users, settings
+
+    // Helper: generic API caller
+    async function apiCall(action, extraData = {}) {
+        try {
+            const payload = {
+                action: action,
+                email: currentUser ? currentUser.email : null,
+                password: currentUser ? "dummy" : null,   // for simplicity; in production use token
+                ...extraData
+            };
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            } catch(e) {
+                return { success: false, error: "Invalid JSON response" };
+            }
+        } catch(err) {
+            return { success: false, error: err.message };
+        }
+    }
+
+    // Helper: file to base64
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+        });
+    }
+
+    // Helper: check permission
+    function hasPermission(perm) {
+        if (!currentUser) return false;
+        if (currentUser.role === "admin") return true;
+        return currentUser.permissions && currentUser.permissions[perm] === true;
+    }
+
+    // -------------------- ROUTING / RENDER --------------------
+    function render() {
+        const root = document.getElementById("root");
+        if (currentView === "login") {
+            root.innerHTML = getLoginHtml();
+            attachLoginEvents();
+        } else if (currentUser) {
+            root.innerHTML = getAppLayoutHtml();
+            attachSidebarEvents();
+            loadViewContent();
+        } else {
+            currentView = "login";
+            render();
+        }
+    }
+
+    function getLoginHtml() {
+        return `
+            <div class="login-container">
+                <h2>📦 Inventory System</h2>
+                <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                <button id="loginBtn">Login</button>
+                <div id="loginError" class="error"></div>
+            </div>
+        `;
+    }
+
+    function attachLoginEvents() {
+        document.getElementById("loginBtn").onclick = async () => {
+            const email = document.getElementById("loginEmail").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            const result = await apiCall("getUserInfo", { email, password });
+            if (result.success) {
+                currentUser = result.user;
+                currentView = "dashboard";
+                render();
+            } else {
+                document.getElementById("loginError").innerText = result.error || "Invalid credentials";
+            }
+        };
+    }
+
+    function getAppLayoutHtml() {
+        const role = currentUser.role;
+        const isAdmin = role === "admin";
+        const isManager = role === "manager" || role === "admin";
+        const isWorker = role === "worker";
+        return `
+            <div class="app">
+                <div class="sidebar">
+                    <h3>Inventory System</h3>
+                    <ul>
+                        <li><a href="#" data-view="dashboard">📊 Dashboard</a></li>
+                        <li><a href="#" data-view="products">📦 Products</a></li>
+                        <li><a href="#" data-view="invoices">🧾 New Invoice</a></li>
+                        <li><a href="#" data-view="invoiceHistory">📜 Invoice History</a></li>
+                        <li><a href="#" data-view="customers">👥 Customers</a></li>
+                        ${(isAdmin || isManager) ? '<li><a href="#" data-view="stockMovements">📉 Stock Movements</a></li>' : ''}
+                        ${isAdmin ? '<li><a href="#" data-view="users">👤 Users</a></li>' : ''}
+                        ${isAdmin ? '<li><a href="#" data-view="settings">⚙️ Settings</a></li>' : ''}
+                        <li><a href="#" data-view="logout">🚪 Logout</a></li>
+                    </ul>
+                    <div style="margin-top: 20px; font-size: 12px;">Logged as: ${currentUser.email} (${currentUser.role})</div>
+                </div>
+                <div class="content" id="mainContent">
+                    Loading...
+                </div>
+            </div>
+        `;
+    }
+
+    function attachSidebarEvents() {
+        document.querySelectorAll("[data-view]").forEach(link => {
+            link.onclick = (e) => {
+                e.preventDefault();
+                const view = link.getAttribute("data-view");
+                if (view === "logout") {
+                    currentUser = null;
+                    currentView = "login";
+                    render();
+                } else {
+                    currentView = view;
+                    loadViewContent();
+                }
+            };
+        });
+    }
+
+    async function loadViewContent() {
+        const container = document.getElementById("mainContent");
+        if (!container) return;
+        switch(currentView) {
+            case "dashboard": await renderDashboard(container); break;
+            case "products": await renderProducts(container); break;
+            case "invoices": await renderInvoices(container); break;
+            case "invoiceHistory": await renderInvoiceHistory(container); break;
+            case "customers": await renderCustomers(container); break;
+            case "stockMovements": await renderStockMovements(container); break;
+            case "users": await renderUsers(container); break;
+            case "settings": await renderSettings(container); break;
+            default: container.innerHTML = "<div class='card'>Unknown view</div>";
+        }
+    }
+
+    // -------------------- DASHBOARD --------------------
+    async function renderDashboard(container) {
+        container.innerHTML = "<div class='card'>Loading dashboard...</div>";
+        const stats = await apiCall("getDashboardStats");
+        const lowStock = await apiCall("getLowStock");
+        let html = `<h1>Dashboard</h1><div class="stats-grid">`;
+        if (stats.success) {
+            html += `
+                <div class="stat-card">📦 Total Products: ${stats.total_products}</div>
+                <div class="stat-card">💰 Stock Value: ${formatCurrency(stats.total_stock_value)}</div>
+                <div class="stat-card">⚠️ Low Stock: ${stats.low_stock_count}</div>
+                <div class="stat-card">💵 Today's Sales: ${formatCurrency(stats.today_sales)}</div>
+                <div class="stat-card">📉 Total Due: ${formatCurrency(stats.total_due)}</div>
+            `;
+        } else {
+            html += `<div class="stat-card">Error loading stats</div>`;
+        }
+        html += `</div>`;
+        if (lowStock.success && lowStock.low_stock && lowStock.low_stock.length) {
+            html += `<div class="card"><h2>Low Stock Alerts</h2><ul>`;
+            lowStock.low_stock.forEach(p => {
+                html += `<li>${p.name} (SKU: ${p.sku}) - Stock: ${p.stock} / Min: ${p.min}</li>`;
+            });
+            html += `</ul></div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    // -------------------- PRODUCTS (with Cloudinary upload) --------------------
+    let productModalOpen = false;
+    let editingProductSku = null;
+
+    async function renderProducts(container) {
+        const canEdit = hasPermission("edit_inventory") || currentUser.role === "admin";
+        const res = await apiCall("getProducts");
+        let html = `<h1>Products</h1>`;
+        if (canEdit) {
+            html += `<button id="addProductBtn">+ Add Product</button>`;
+        }
+        if (!res.success) {
+            html += `<div class="card">Error: ${res.error}</div>`;
+            container.innerHTML = html;
+            if (canEdit) document.getElementById("addProductBtn")?.addEventListener("click", () => openProductModal());
+            return;
+        }
+        let tableHtml = `<table><thead><tr><th>SKU</th><th>Name</th><th>Stock</th><th>Price</th><th>Image</th>${canEdit ? '<th>Actions</th>' : ''}</tr></thead><tbody>`;
+        for (let p of res.products) {
+            tableHtml += `<tr>
+                <td>${escapeHtml(p.sku)}</td>
+                <td>${escapeHtml(p.name)}</td>
+                <td>${p.stock}</td>
+                <td>${p.selling_price}</td>
+                <td>${p.image_url ? `<img src="${p.image_url}" width="50" style="max-width:50px;">` : '-'}</td>
+                ${canEdit ? `<td><button class="editProductBtn" data-sku="${escapeHtml(p.sku)}">Edit</button></td>` : ''}
+            </tr>`;
+        }
+        tableHtml += `</tbody></table>`;
+        html += tableHtml;
+        container.innerHTML = html;
+
+        if (canEdit) {
+            document.getElementById("addProductBtn")?.addEventListener("click", () => openProductModal());
+            document.querySelectorAll(".editProductBtn").forEach(btn => {
+                btn.addEventListener("click", async () => {
+                    const sku = btn.getAttribute("data-sku");
+                    await openProductModal(sku);
+                });
+            });
+        }
+    }
+
+    async function openProductModal(sku = null) {
+        editingProductSku = sku;
+        let product = null;
+        if (sku) {
+            const res = await apiCall("getProductByBarcode", { barcode: sku });
+            if (res.success) product = res.product;
+            else { alert("Product not found"); return; }
+        }
+        const modalHtml = `
+            <div id="productModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" id="closeModalBtn">&times;</span>
+                    <h2>${sku ? "Edit Product" : "Add Product"}</h2>
+                    <form id="productForm">
+                        <input type="hidden" id="productId" value="${product?.id || ''}">
+                        <label>SKU *</label><input type="text" id="sku" value="${escapeHtml(product?.sku || '')}" required>
+                        <label>Name *</label><input type="text" id="name" value="${escapeHtml(product?.name || '')}" required>
+                        <label>Brand</label><input type="text" id="brand" value="${escapeHtml(product?.brand || '')}">
+                        <label>Category</label><input type="text" id="category" value="${escapeHtml(product?.category || '')}">
+                        <label>Subcategory</label><input type="text" id="subcategory" value="${escapeHtml(product?.subcategory || '')}">
+                        <label>Barcode</label><input type="text" id="barcode" value="${escapeHtml(product?.barcode || '')}">
+                        <label>Purchase Price</label><input type="number" step="0.01" id="purchase_price" value="${product?.purchase_price || 0}">
+                        <label>Selling Price *</label><input type="number" step="0.01" id="selling_price" value="${product?.selling_price || 0}" required>
+                        <label>Wholesale Price</label><input type="number" step="0.01" id="wholesale_price" value="${product?.wholesale_price || 0}">
+                        <label>Stock *</label><input type="number" id="stock" value="${product?.stock || 0}" required>
+                        <label>Min Stock Alert</label><input type="number" id="min_stock" value="${product?.min_stock || 5}">
+                        <label>Supplier</label><input type="text" id="supplier" value="${escapeHtml(product?.supplier || '')}">
+                        <label>Product Image</label>
+                        <input type="file" id="imageFile" accept="image/*">
+                        <img id="imagePreview" class="preview" src="${product?.image_url || ''}" style="${product?.image_url ? '' : 'display:none;'}">
+                        <input type="hidden" id="imageUrl" value="${escapeHtml(product?.image_url || '')}">
+                        <label>Status</label>
+                        <select id="status">
+                            <option value="active" ${product?.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="inactive" ${product?.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                            <option value="out_of_stock" ${product?.status === 'out_of_stock' ? 'selected' : ''}>Out of Stock</option>
+                        </select>
+                        <label>Notes</label><textarea id="notes">${escapeHtml(product?.notes || '')}</textarea>
+                        <button type="button" id="saveProductBtn">Save Product</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+        const modal = document.getElementById("productModal");
+        const closeBtn = document.getElementById("closeModalBtn");
+        const saveBtn = document.getElementById("saveProductBtn");
+        const imageFile = document.getElementById("imageFile");
+        const imagePreview = document.getElementById("imagePreview");
+        const imageUrlField = document.getElementById("imageUrl");
+
+        imageFile.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    imagePreview.src = ev.target.result;
+                    imagePreview.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        saveBtn.onclick = async () => {
+            let finalImageUrl = imageUrlField.value;
+            if (imageFile.files.length > 0) {
+                const base64 = await fileToBase64(imageFile.files[0]);
+                const uploadRes = await apiCall("uploadImage", { imageBase64: base64 });
+                if (!uploadRes.success) {
+                    alert("Image upload failed: " + uploadRes.error);
+                    return;
+                }
+                finalImageUrl = uploadRes.url;
+            }
+            const productData = {
+                sku: document.getElementById("sku").value.trim(),
+                name: document.getElementById("name").value.trim(),
+                brand: document.getElementById("brand").value.trim(),
+                category: document.getElementById("category").value.trim(),
+                subcategory: document.getElementById("subcategory").value.trim(),
+                barcode: document.getElementById("barcode").value.trim(),
+                purchase_price: parseFloat(document.getElementById("purchase_price").value) || 0,
+                selling_price: parseFloat(document.getElementById("selling_price").value),
+                wholesale_price: parseFloat(document.getElementById("wholesale_price").value) || 0,
+                stock: parseInt(document.getElementById("stock").value),
+                min_stock: parseInt(document.getElementById("min_stock").value) || 0,
+                supplier: document.getElementById("supplier").value.trim(),
+                image_url: finalImageUrl,
+                status: document.getElementById("status").value,
+                notes: document.getElementById("notes").value.trim()
+            };
+            const productId = document.getElementById("productId").value;
+            const action = productId ? "updateProduct" : "addProduct";
+            if (productId) productData.id = productId;
+            const res = await apiCall(action, productData);
+            if (res.success) {
+                modal.remove();
+                await renderProducts(document.getElementById("mainContent"));
+            } else {
+                alert("Error: " + res.error);
+            }
+        };
+        closeBtn.onclick = () => modal.remove();
+        modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
+    }
+
+    // -------------------- INVOICE CREATION --------------------
+    let cart = [];
+
+    async function renderInvoices(container) {
+        if (!hasPermission("create_invoice")) {
+            container.innerHTML = "<div class='card'>Access denied.</div>";
+            return;
+        }
+        cart = [];
+        container.innerHTML = `
+            <h1>Create Invoice</h1>
+            <div class="card">
+                <label>🔍 Scan Barcode:</label>
+                <input type="text" id="barcodeScan" placeholder="Scan or type barcode">
+                <button id="addByBarcodeBtn">Add Product</button>
+            </div>
+            <div class="card">
+                <label>Customer Name:</label><input type="text" id="customerName" placeholder="Name">
+                <label>Customer Phone:</label><input type="text" id="customerPhone" placeholder="Phone">
+            </div>
+            <div class="card">
+                <table id="cartTable"><thead><tr><th>SKU</th><th>Name</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead><tbody></tbody></table>
+                <div>Subtotal: <span id="subtotal">0</span></div>
+                <label>Discount: <input type="number" id="discount" value="0" step="any"></label>
+                <div>Total: <span id="total">0</span></div>
+                <label>Paid: <input type="number" id="paid" value="0" step="any"></label>
+                <div>Due: <span id="due">0</span></div>
+                <label>Payment Method: <select id="paymentMethod"><option>cash</option><option>card</option><option>bank transfer</option></select></label>
+                <button id="saveInvoiceBtn">💾 Save Invoice</button>
+            </div>
+        `;
+
+        document.getElementById("addByBarcodeBtn").onclick = async () => {
+            const barcode = document.getElementById("barcodeScan").value.trim();
+            if (!barcode) return;
+            const res = await apiCall("getProductByBarcode", { barcode });
+            if (res.success) {
+                const p = res.product;
+                const existing = cart.find(i => i.sku === p.sku);
+                if (existing) existing.qty++;
+                else cart.push({ sku: p.sku, name: p.name, qty: 1, price: p.selling_price });
+                renderCartTable();
+            } else {
+                alert("Product not found");
+            }
+            document.getElementById("barcodeScan").value = "";
+        };
+        document.getElementById("saveInvoiceBtn").onclick = async () => {
+            if (cart.length === 0) return alert("Cart is empty");
+            const customerName = document.getElementById("customerName").value.trim();
+            const customerPhone = document.getElementById("customerPhone").value.trim();
+            const discount = parseFloat(document.getElementById("discount").value) || 0;
+            const subtotal = cart.reduce((sum, i) => sum + (i.qty * i.price), 0);
+            const total = subtotal - discount;
+            const paid = parseFloat(document.getElementById("paid").value) || 0;
+            const due = total - paid;
+            const invoiceData = {
+                customer_name: customerName || "Walk-in Customer",
+                customer_phone: customerPhone,
+                total: total,
+                paid: paid,
+                due: due,
+                payment_method: document.getElementById("paymentMethod").value,
+                items: cart.map(i => ({ sku: i.sku, qty: i.qty, unit_price: i.price }))
+            };
+            const res = await apiCall("createInvoice", invoiceData);
+            if (res.success) {
+                alert(`Invoice ${res.invoice_no} created successfully.`);
+                cart = [];
+                renderCartTable();
+                document.getElementById("customerName").value = "";
+                document.getElementById("customerPhone").value = "";
+                document.getElementById("discount").value = "0";
+                document.getElementById("paid").value = "0";
+            } else {
+                alert("Error: " + res.error);
+            }
+        };
+        function renderCartTable() {
+            const tbody = document.querySelector("#cartTable tbody");
+            let subtotal = 0;
+            let html = "";
+            cart.forEach((item, idx) => {
+                const total = item.qty * item.price;
+                subtotal += total;
+                html += `<tr>
+                    <td>${escapeHtml(item.sku)}</td>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td><input type="number" value="${item.qty}" min="1" class="cartQty" data-idx="${idx}" style="width:70px;"></td>
+                    <td>${item.price}</td>
+                    <td>${total}</td>
+                    <td><button class="removeItem" data-idx="${idx}">Remove</button></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById("subtotal").innerText = subtotal.toFixed(2);
+            updateTotals();
+            document.querySelectorAll(".cartQty").forEach(inp => {
+                inp.addEventListener("change", (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    const newQty = parseInt(e.target.value);
+                    if (newQty > 0) cart[idx].qty = newQty;
+                    else cart.splice(idx,1);
+                    renderCartTable();
+                });
+            });
+            document.querySelectorAll(".removeItem").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    const idx = parseInt(btn.dataset.idx);
+                    cart.splice(idx,1);
+                    renderCartTable();
+                });
+            });
+        }
+        function updateTotals() {
+            const subtotal = parseFloat(document.getElementById("subtotal").innerText);
+            const discount = parseFloat(document.getElementById("discount").value) || 0;
+            const total = subtotal - discount;
+            const paid = parseFloat(document.getElementById("paid").value) || 0;
+            document.getElementById("total").innerText = total.toFixed(2);
+            document.getElementById("due").innerText = (total - paid).toFixed(2);
+        }
+        document.getElementById("discount").addEventListener("input", updateTotals);
+        document.getElementById("paid").addEventListener("input", updateTotals);
+        renderCartTable();
+    }
+
+    // -------------------- INVOICE HISTORY --------------------
+    async function renderInvoiceHistory(container) {
+        const res = await apiCall("getInvoices");
+        if (!res.success) {
+            container.innerHTML = `<div class="card">Error: ${res.error}</div>`;
+            return;
+        }
+        let html = `<h1>Invoice History</h1><div class="card"><table><thead><tr><th>Invoice#</th><th>Customer</th><th>Date</th><th>Total</th><th>Paid</th><th>Due</th><th>Status</th></tr></thead><tbody>`;
+        for (let inv of res.invoices) {
+            html += `<tr>
+                <td>${escapeHtml(inv.invoice_id)}</td>
+                <td>${escapeHtml(inv.customer_name)}</td>
+                <td>${new Date(inv.date).toLocaleDateString()}</td>
+                <td>${inv.total}</td>
+                <td>${inv.paid}</td>
+                <td>${inv.due}</td>
+                <td>${inv.status}</td>
+            </tr>`;
+        }
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+    }
+
+    // -------------------- CUSTOMERS --------------------
+    async function renderCustomers(container) {
+        const res = await apiCall("getCustomers");
+        if (!res.success) {
+            container.innerHTML = `<div class="card">Error: ${res.error}</div>`;
+            return;
+        }
+        let html = `<h1>Customers</h1><div class="card"><table><thead><tr><th>Phone</th><th>Name</th><th>Purchases</th><th>Total Spent</th><th>Last Purchase</th></tr></thead><tbody>`;
+        for (let c of res.customers) {
+            html += `<tr>
+                <td>${escapeHtml(c.phone)}</td>
+                <td>${escapeHtml(c.name)}</td>
+                <td>${c.total_purchases}</td>
+                <td>${c.total_spent}</td>
+                <td>${c.last_purchase_date ? new Date(c.last_purchase_date).toLocaleDateString() : '-'}</td>
+            </tr>`;
+        }
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+    }
+
+    // -------------------- STOCK MOVEMENTS --------------------
+    async function renderStockMovements(container) {
+        const res = await apiCall("getStockMovements");
+        if (!res.success) {
+            container.innerHTML = `<div class="card">Error: ${res.error}</div>`;
+            return;
+        }
+        let html = `<h1>Stock Movements</h1><div class="card"><table><thead><tr><th>Date</th><th>Product ID</th><th>Type</th><th>Qty</th><th>Reason</th><th>User</th></tr></thead><tbody>`;
+        for (let m of res.movements) {
+            html += `<tr>
+                <td>${new Date(m.timestamp).toLocaleString()}</td>
+                <td>${m.product_id}</td>
+                <td>${m.type}</td>
+                <td>${m.qty}</td>
+                <td>${escapeHtml(m.reason)}</td>
+                <td>${escapeHtml(m.user)}</td>
+            </tr>`;
+        }
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+    }
+
+    // -------------------- USER MANAGEMENT (admin only) --------------------
+    async function renderUsers(container) {
+        if (currentUser.role !== "admin") {
+            container.innerHTML = "<div class='card'>Access denied.</div>";
+            return;
+        }
+        // Users are stored in sheet; we need a custom endpoint to list users (optional)
+        // For simplicity, we show a placeholder and add user form.
+        // In real use, you'd implement getUsers endpoint.
+        container.innerHTML = `
+            <h1>User Management</h1>
+            <div class="card">
+                <h3>Add New User</h3>
+                <input type="email" id="newUserEmail" placeholder="Email">
+                <input type="password" id="newUserPassword" placeholder="Password">
+                <select id="newUserRole"><option>worker</option><option>manager</option><option>admin</option></select>
+                <input type="text" id="newUserFullName" placeholder="Full Name">
+                <button id="addUserBtn">Add User</button>
+            </div>
+            <div id="userList">Loading users...</div>
+        `;
+        // Fetch users (we need a getUsers action; if not implemented, show note)
+        const res = await apiCall("getUsers");  // You may need to add this in backend; fallback
+        if (res.success && res.users) {
+            let html = `<div class="card"><h3>Existing Users</h3><table><tr><th>Email</th><th>Role</th><th>Name</th><th>Active</th><th></th></tr>`;
+            for (let u of res.users) {
+                html += `<tr><td>${escapeHtml(u.email)}</td><td>${u.role}</td><td>${escapeHtml(u.fullName)}</td><td>${u.active}</td><td><button class="deactivateUser" data-email="${escapeHtml(u.email)}">Deactivate</button></td></tr>`;
+            }
+            html += `</table></div>`;
+            document.getElementById("userList").innerHTML = html;
+            document.querySelectorAll(".deactivateUser").forEach(btn => {
+                btn.onclick = async () => {
+                    const email = btn.getAttribute("data-email");
+                    const resp = await apiCall("manageUser", { action: "deactivate", email });
+                    alert(resp.success ? "User deactivated" : resp.error);
+                    renderUsers(container);
+                };
+            });
+        } else {
+            document.getElementById("userList").innerHTML = "<div class='card'>Add getUsers endpoint in backend to see list.</div>";
+        }
+        document.getElementById("addUserBtn").onclick = async () => {
+            const email = document.getElementById("newUserEmail").value.trim();
+            const password = document.getElementById("newUserPassword").value;
+            const role = document.getElementById("newUserRole").value;
+            const fullName = document.getElementById("newUserFullName").value.trim();
+            if (!email || !password) return alert("Email and password required");
+            const resp = await apiCall("manageUser", { action: "add", email, password, role, fullName });
+            alert(resp.success ? "User added" : resp.error);
+            if (resp.success) renderUsers(container);
+        };
+    }
+
+    // -------------------- SETTINGS (admin only) --------------------
+    async function renderSettings(container) {
+        if (currentUser.role !== "admin") {
+            container.innerHTML = "<div class='card'>Access denied.</div>";
+            return;
+        }
+        const res = await apiCall("getSettings");
+        let html = `<h1>Settings</h1><div class="card"><form id="settingsForm">`;
+        if (res.success) {
+            const settings = res.settings;
+            for (let [key, value] of Object.entries(settings)) {
+                html += `<label>${key}</label><input type="text" name="${key}" value="${escapeHtml(value)}">`;
+            }
+        } else {
+            html += `<div>Could not load settings</div>`;
+        }
+        html += `<button type="submit">Save Settings</button></form></div>`;
+        container.innerHTML = html;
+        document.getElementById("settingsForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const newSettings = {};
+            for (let [key, value] of formData.entries()) newSettings[key] = value;
+            const updateRes = await apiCall("updateSettings", { settings: newSettings });
+            alert(updateRes.success ? "Settings updated" : "Error: " + updateRes.error);
+        };
+    }
+
+    // -------------------- UTILITIES --------------------
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+    }
+
+    // -------------------- START --------------------
+    render();
+</script>
+</body>
+</html>
