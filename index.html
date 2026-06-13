@@ -42,13 +42,12 @@
 
 <script>
     // ======================== CONFIGURATION ========================
-    // 👇 REPLACE THIS WITH YOUR ACTUAL APPS SCRIPT URL (provided)
     const API_URL = "https://script.google.com/macros/s/AKfycbwRbZWFnku1MsCY8upgJ1wded0Wr_tc_0aXEVuZC1uNx3wNQ-hjehXy-DCWAqDJEw7xRw/exec";
     
     let currentUser = null;
     let currentView = "login";
 
-    // ======================== API CALL (urlencoded, no CORS) ========================
+    // ======================== API CALL ========================
     async function apiCall(action, extraData = {}) {
         try {
             const payload = new URLSearchParams();
@@ -184,31 +183,42 @@
         }
     }
 
-    // ======================== DASHBOARD ========================
+    // ======================== DASHBOARD (safe fallback) ========================
     async function renderDashboard(container) {
         container.innerHTML = "<div class='card'>Loading dashboard...</div>";
         const stats = await apiCall("getDashboardStats");
         const lowStock = await apiCall("getLowStock");
+        
         let html = `<h1>Dashboard</h1><div class="stats-grid">`;
-        if (stats.success) {
-            html += `
-                <div class="stat-card">📦 Total Products: ${stats.total_products || 0}</div>
-                <div class="stat-card">💰 Stock Value: ${formatCurrency(stats.total_stock_value || 0)}</div>
-                <div class="stat-card">⚠️ Low Stock: ${stats.low_stock_count || 0}</div>
-                <div class="stat-card">💵 Today's Sales: ${formatCurrency(stats.today_sales || 0)}</div>
-                <div class="stat-card">📉 Total Due: ${formatCurrency(stats.total_due || 0)}</div>
-            `;
-        } else html += `<div class="stat-card">Error loading stats</div>`;
+        
+        const totalProducts = stats.success ? stats.total_products : 0;
+        const stockValue = stats.success ? stats.total_stock_value : 0;
+        const lowCount = stats.success ? stats.low_stock_count : 0;
+        const todaySales = stats.success ? stats.today_sales : 0;
+        const totalDue = stats.success ? stats.total_due : 0;
+        
+        html += `
+            <div class="stat-card">📦 Total Products: ${totalProducts}</div>
+            <div class="stat-card">💰 Stock Value: ${formatCurrency(stockValue)}</div>
+            <div class="stat-card">⚠️ Low Stock: ${lowCount}</div>
+            <div class="stat-card">💵 Today's Sales: ${formatCurrency(todaySales)}</div>
+            <div class="stat-card">📉 Total Due: ${formatCurrency(totalDue)}</div>
+        `;
         html += `</div>`;
+        
         if (lowStock.success && lowStock.low_stock && lowStock.low_stock.length) {
             html += `<div class="card"><h2>Low Stock Alerts</h2><ul>`;
             lowStock.low_stock.forEach(p => html += `<li>${escapeHtml(p.name)} (SKU: ${escapeHtml(p.sku)}) - Stock: ${p.stock} / Min: ${p.min}</li>`);
             html += `</ul></div>`;
+        } else if (lowStock.success) {
+            html += `<div class="card"><h2>Low Stock Alerts</h2><p>✅ No low stock items.</p></div>`;
+        } else {
+            html += `<div class="card"><h2>Low Stock Alerts</h2><p>Could not load low stock data.</p></div>`;
         }
         container.innerHTML = html;
     }
 
-    // ======================== PRODUCTS (with imgbb upload) ========================
+    // ======================== PRODUCTS ========================
     async function renderProducts(container) {
         const canEdit = hasPermission("edit_inventory") || currentUser.role === "admin";
         const res = await apiCall("getProducts");
@@ -220,7 +230,7 @@
             if (canEdit) document.getElementById("addProductBtn")?.addEventListener("click", () => openProductModal());
             return;
         }
-        let tableHtml = `<div class="card"><table><thead><tr><th>SKU</th><th>Name</th><th>Image</th><th>Stock</th><th>Price</th>${canEdit ? '<th>Actions</th>' : ''}</tr></thead><tbody>`;
+        let tableHtml = `<div class="card"><table><thead><tr><th>SKU</th><th>Name</th><th>Image</th><th>Stock</th><th>Price</th>${canEdit ? '<th>Actions</th>' : ''}</td></thead><tbody>`;
         for (let p of res.products) {
             tableHtml += `<tr>
                 <td>${escapeHtml(p.sku)}</td>
@@ -333,7 +343,7 @@
         modal.addEventListener("click", (e) => { if (e.target === modal) modal.remove(); });
     }
 
-    // ======================== INVOICE CREATION ========================
+    // ======================== INVOICES ========================
     let cart = [];
     async function renderInvoices(container) {
         if (!hasPermission("create_invoice")) { container.innerHTML = "<div class='card'>Access denied.</div>"; return; }
@@ -441,7 +451,7 @@
     async function renderCustomers(container) {
         const res = await apiCall("getCustomers");
         if (!res.success) { container.innerHTML = `<div class="card">Error: ${res.error}</div>`; return; }
-        let html = `<h1>Customers</h1><div class="card"><table><thead><tr><th>Phone</th><th>Name</th><th>Purchases</th><th>Total Spent</th><th>Last Purchase</th></tr></thead><tbody>`;
+        let html = `<h1>Customers</h1><div class="card"><tr><thead><tr><th>Phone</th><th>Name</th><th>Purchases</th><th>Total Spent</th><th>Last Purchase</th></tr></thead><tbody>`;
         for (let c of res.customers) {
             html += `<tr>
                 <td>${escapeHtml(c.phone)}</td>
@@ -474,11 +484,10 @@
         container.innerHTML = html;
     }
 
-    // ======================== USER MANAGEMENT ========================
+    // ======================== USERS ========================
     async function renderUsers(container) {
         if (currentUser.role !== "admin") { container.innerHTML = "<div class='card'>Access denied.</div>"; return; }
         container.innerHTML = `<h1>User Management</h1><div class="card"><h3>Add New User</h3><input type="email" id="newUserEmail" placeholder="Email"><input type="password" id="newUserPassword" placeholder="Password"><select id="newUserRole"><option>worker</option><option>manager</option><option>admin</option></select><input type="text" id="newUserFullName" placeholder="Full Name"><button id="addUserBtn">Add User</button></div><div id="userList">Loading users...</div>`;
-        // The backend may not have getUsers yet; we can skip or add manually. Show placeholder.
         document.getElementById("userList").innerHTML = "<div class='card'>User list feature coming soon. Use the 'users' sheet directly for now.</div>";
         document.getElementById("addUserBtn").onclick = async () => {
             const email = document.getElementById("newUserEmail").value.trim();
