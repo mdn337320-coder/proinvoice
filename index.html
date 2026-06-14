@@ -109,7 +109,7 @@
             <div id="inventoryTab" class="tab-content hidden">
                 <div class="card"><div class="card-title"><i class="fas fa-boxes"></i> Manage Products</div>
                     <div style="display:flex; gap:0.5rem; margin-bottom:1rem;"><input type="text" id="searchProduct" placeholder="🔍 Search by name or barcode" style="flex:1; padding:0.5rem;"><button id="addProductBtn" class="btn btn-primary">Add</button><button id="scanInventoryBtn" class="btn btn-outline"><i class="fas fa-camera"></i> Scan</button></div>
-                    <div class="overflow-x-auto"><table class="products-table"><thead><tr><th>Barcode</th><th>Image</th><th>Name</th><th>Stock</th><th>Price</th><th>Actions</th></td></thead><tbody id="productsTbody"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="products-table"><thead><tr><th>Barcode</th><th>Image</th><th>Name</th><th>Stock</th><th>Price</th><th>Actions</th></tr></thead><tbody id="productsTbody"></tbody></table></div>
                 </div>
             </div>
 
@@ -126,7 +126,7 @@
                                 <div id="scannerControl" style="display:none; text-align:right;"><button id="stopScannerBtn" class="btn btn-danger" style="background:var(--danger);">Close scanner</button></div>
                                 <div class="product-search-container" style="margin:1rem 0;"><label>Or search product</label><input type="text" id="productSearchInput" placeholder="Type name or barcode..." autocomplete="off"><div id="productSuggestions" class="autocomplete-items hidden"></div></div>
                             </div>
-                            <div class="card"><div class="card-title">Items</div><div class="overflow-x-auto"><table class="items-table"><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th><tr></thead><tbody id="itemsBody"></tbody></table></div></div>
+                            <div class="card"><div class="card-title">Items</div><div class="overflow-x-auto"><table class="items-table"><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead><tbody id="itemsBody"></tbody></table></div></div>
                         </div>
                         <div class="summary-card">
                             <div class="card-title">Order summary</div>
@@ -147,7 +147,7 @@
             </div>
 
             <!-- History, Customers, Movements, Workers, Settings -->
-            <div id="historyTab" class="tab-content hidden"><div class="card"><div class="card-title">All Invoices</div><div class="overflow-x-auto"><table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody id="historyTbody"></tbody></tr></div></div></div>
+            <div id="historyTab" class="tab-content hidden"><div class="card"><div class="card-title">All Invoices</div><div class="overflow-x-auto"><table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody id="historyTbody"></tbody></table></div></div></div>
             <div id="customersTab" class="tab-content hidden"><div class="card"><div class="card-title">Customers</div><div id="customersList"></div></div></div>
             <div id="movementsTab" class="tab-content hidden"><div class="card"><div class="card-title">Stock Movements</div><div class="overflow-x-auto"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>User</th></tr></thead><tbody id="movementsTbody"></tbody></table></div></div></div>
             <div id="workersTab" class="tab-content hidden"><div class="card"><div class="card-title">Workers</div><div id="workersList"></div><div style="margin-top:1rem;"><input type="text" id="newWorkerName" placeholder="Worker name"><button id="addWorkerBtn" class="btn btn-primary">Add</button></div></div></div>
@@ -161,7 +161,8 @@
 
 <script>
     // ==================== CONFIGURATION ====================
-    const API_URL = "https://script.google.com/macros/s/YOUR_APP_SCRIPT_URL_HERE/exec"; // REPLACE WITH YOUR NEW URL
+    // YOUR ACTUAL APPS SCRIPT URL – already inserted
+    const API_URL = "https://script.google.com/macros/s/AKfycbwRbZWFnku1MsCY8upgJ1wded0Wr_tc_0aXEVuZC1uNx3wNQ-hjehXy-DCWAqDJEw7xRw/exec";
     const IMGBB_API_KEY = "31c5a3faf2dad607b733f9a3a34500bd";
     let currentUser = null;
     let currentPassword = null;
@@ -253,9 +254,9 @@
                 <tr><td style="white-space: nowrap;">${p.barcode}</td>
                 <td>${p.image_url ? `<img src="${p.image_url}" width="40" height="40" style="border-radius:8px;">` : '-'}</td>
                 <td>${p.name}</td>
-                <td>${p.stock}</td>
-                <td>${formatCurrency(p.selling_price)}</td>
-                <td><button class="editStockBtn btn btn-outline text-xs" data-sku="${p.sku}">Edit Stock</button></td>
+                <td>${p.stock}侧
+                <td>${formatCurrency(p.selling_price)}侧
+                <td><button class="editStockBtn btn btn-outline text-xs" data-sku="${p.sku}">Edit Stock</button>侧
             </tr>`).join('');
             document.querySelectorAll('.editStockBtn').forEach(btn => btn.onclick = async () => {
                 const ns = prompt('Enter new stock quantity:');
@@ -297,15 +298,15 @@
     }
     function renderInvoiceItems() {
         const tbody = document.getElementById('itemsBody');
-        if(!currentItems.length) { tbody.innerHTML = '<tr><td colspan="6">No items added</td></tr>'; recalcTotals(); return; }
+        if(!currentItems.length) { tbody.innerHTML = '<tr><td colspan="6">No items added侧</table>'; recalcTotals(); return; }
         tbody.innerHTML = currentItems.map((item,idx) => `
             <tr>
-                <td>${idx+1}</td>
-                <td><strong>${item.name}</strong><br><small>${item.barcode}</small></td>
-                <td><div style="display:flex;"><button class="qty-dec" data-idx="${idx}">-</button><input type="number" class="qty-val" data-idx="${idx}" value="${item.qty}" min="1" style="width:60px;"><button class="qty-inc" data-idx="${idx}">+</button></div></td>
-                <td>${formatCurrency(item.price)}</td>
-                <td>${formatCurrency(item.price*item.qty)}</td>
-                <td><button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></td>
+                <td>${idx+1}侧
+                <td><strong>${item.name}</strong><br><small>${item.barcode}</small>侧
+                <td><div style="display:flex;"><button class="qty-dec" data-idx="${idx}">-</button><input type="number" class="qty-val" data-idx="${idx}" value="${item.qty}" min="1" style="width:60px;"><button class="qty-inc" data-idx="${idx}">+</button></div>侧
+                <td>${formatCurrency(item.price)}侧
+                <td>${formatCurrency(item.price*item.qty)}侧
+                <td><button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button>侧
             </tr>
         `).join('');
         document.querySelectorAll('.qty-dec').forEach(btn => btn.onclick = () => { let idx=parseInt(btn.dataset.idx); if(currentItems[idx].qty>1) currentItems[idx].qty--; renderInvoiceItems(); });
@@ -404,7 +405,7 @@
             <div class="invoice-header"><h1>${settings.storeName||'StockPulse'}</h1><p>Invoice</p></div>
             <div class="invoice-details"><div><strong>Invoice No:</strong> ${document.getElementById('invoiceNo').value}</div><div><strong>Date:</strong> ${document.getElementById('invoiceDate').value}</div></div>
             <div class="customer-details"><div><strong>Customer:</strong> ${document.getElementById('custName').value || 'Walk-in'}</div><div><strong>Phone:</strong> ${document.getElementById('custPhone').value || '-'}</div></div>
-            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${currentItems.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>${formatCurrency(i.price)}</td><td>${formatCurrency(i.price*i.qty)}</td></tr>`).join('')}</tbody></table>
+            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${currentItems.map(i => `<tr><td>${i.name}侧侧${formatCurrency(i.price)}侧${formatCurrency(i.price*i.qty)}侧</tr>`).join('')}</tbody></table>
             <div class="totals"><p>Subtotal: ${document.getElementById('subtotal').innerText}</p><p>Discount: ${document.getElementById('discountAmount').innerText}</p><p>Tax: ${document.getElementById('taxAmount').innerText}</p><h3>Grand Total: ${document.getElementById('grandTotal').innerText}</h3><p>Paid: ${formatCurrency(document.getElementById('received').value)} | Change: ${document.getElementById('changeDue').innerText}</p></div>
             <div class="footer">${settings.thankYouMsg || 'Thank you for your business!'}</div>
         </div></body></html>`);
@@ -422,9 +423,9 @@
     async function stopInventoryScanner() { if(inventoryScanner) { try{ await inventoryScanner.stop(); await inventoryScanner.clear(); }catch(e){} inventoryScanner=null; } }
 
     // ========== OTHER MODULES ==========
-    async function loadHistory() { const inv = await apiCall("getInvoices"); document.getElementById('historyTbody').innerHTML = (inv.invoices||[]).map(i => `<tr><td>${i.invoice_id}</td><td>${new Date(i.date).toLocaleDateString()}</td><td>${i.customer_name}</td><td>${formatCurrency(i.total)}</td><td><button class="printHistoryBtn btn btn-outline text-xs" data-id="${i.invoice_id}">Print</button></td></tr>`).join(''); document.querySelectorAll('.printHistoryBtn').forEach(btn => btn.onclick = async () => { const id = btn.dataset.id; try { const invData = await apiCall("getInvoiceById", { invoiceId: id }); printInvoiceById(invData); } catch(e) { toast(e.message,'error'); } }); }
+    async function loadHistory() { const inv = await apiCall("getInvoices"); document.getElementById('historyTbody').innerHTML = (inv.invoices||[]).map(i => `<tr><td>${i.invoice_id}侧<td>${new Date(i.date).toLocaleDateString()}侧<td>${i.customer_name}侧<td>${formatCurrency(i.total)}侧<td><button class="printHistoryBtn btn btn-outline text-xs" data-id="${i.invoice_id}">Print</button>侧</tr>`).join(''); document.querySelectorAll('.printHistoryBtn').forEach(btn => btn.onclick = async () => { const id = btn.dataset.id; try { const invData = await apiCall("getInvoiceById", { invoiceId: id }); printInvoiceById(invData); } catch(e) { toast(e.message,'error'); } }); }
     async function loadCustomers() { const c = await apiCall("getCustomers"); document.getElementById('customersList').innerHTML = (c.customers||[]).map(cu => `<div class="border-b py-2"><strong>${cu.name}</strong><br>${cu.phone}<br>${cu.total_purchases} invoices · ${formatCurrency(cu.total_spent)}</div>`).join(''); }
-    async function loadMovements() { const m = await apiCall("getStockMovements"); document.getElementById('movementsTbody').innerHTML = (m.movements||[]).map(mv => `<tr><td>${new Date(mv.timestamp).toLocaleString()}</td><td>${mv.product_id}</td><td>${mv.type}</td><td>${mv.qty}</td><td>${mv.user||'-'}</td></tr>`).join(''); }
+    async function loadMovements() { const m = await apiCall("getStockMovements"); document.getElementById('movementsTbody').innerHTML = (m.movements||[]).map(mv => `<tr><td>${new Date(mv.timestamp).toLocaleString()}侧<td>${mv.product_id}侧<td>${mv.type}侧<td>${mv.qty}侧<td>${mv.user||'-'}侧</table>`).join(''); }
     async function loadWorkers() { const w = await apiCall("getWorkers"); document.getElementById('workersList').innerHTML = (w.workers||[]).map(wk => `<div class="border-b py-2">${wk}</div>`).join(''); }
     async function addWorker() { const name = document.getElementById('newWorkerName').value.trim(); if(!name) return; await apiCall("addWorker", { workerName: name }); toast('Worker added'); await loadWorkers(); await loadWorkersSelect(); document.getElementById('newWorkerName').value = ''; }
     async function loadWorkersSelect() { const w = await apiCall("getWorkers"); const sel = document.getElementById('workerSelect'); sel.innerHTML = (w.workers||[]).map(wk => `<option>${wk}</option>`).join(''); }
