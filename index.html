@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>StockPulse | Premium Inventory</title>
+    <title>StockPulse | Enterprise Inventory</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -90,12 +90,12 @@
                 <div data-tab="settings" class="nav-item"><i class="fas fa-cog"></i> Settings</div>
             </div>
             <div style="margin-top: auto; padding-top: 2rem; font-size: 0.75rem; color: #94a3b8;"><i class="fas fa-shield-alt"></i> Role: <span id="roleBadge">Admin</span></div>
+            <button id="logoutBtn" class="btn btn-outline" style="margin-top:1rem; width:100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </aside>
         <main class="main">
             <div class="top-bar" style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
                 <h1 class="page-title" id="pageTitle" style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-chart-line"></i> Dashboard</h1>
                 <select id="workerSelect" class="worker-select" style="background: white; border-radius: 2rem; padding: 0.5rem 1rem;"></select>
-                <button id="logoutBtn" class="btn btn-outline" style="margin-left: 1rem;"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
 
             <!-- Dashboard -->
@@ -109,7 +109,7 @@
             <div id="inventoryTab" class="tab-content hidden">
                 <div class="card"><div class="card-title"><i class="fas fa-boxes"></i> Manage Products</div>
                     <div style="display:flex; gap:0.5rem; margin-bottom:1rem;"><input type="text" id="searchProduct" placeholder="🔍 Search by name or barcode" style="flex:1; padding:0.5rem;"><button id="addProductBtn" class="btn btn-primary">Add</button><button id="scanInventoryBtn" class="btn btn-outline"><i class="fas fa-camera"></i> Scan</button></div>
-                    <div class="overflow-x-auto"><table class="products-table"><thead><tr><th>Barcode</th><th>Image</th><th>Name</th><th>Stock</th><th>Price</th><th>Actions</th></tr></thead><tbody id="productsTbody"></tbody></table></div>
+                    <div class="overflow-x-auto"><table class="products-table"><thead><tr><th>Barcode</th><th>Image</th><th>Name</th><th>Stock</th><th>Price</th><th>Actions</th></td></thead><tbody id="productsTbody"></tbody></table></div>
                 </div>
             </div>
 
@@ -126,7 +126,7 @@
                                 <div id="scannerControl" style="display:none; text-align:right;"><button id="stopScannerBtn" class="btn btn-danger" style="background:var(--danger);">Close scanner</button></div>
                                 <div class="product-search-container" style="margin:1rem 0;"><label>Or search product</label><input type="text" id="productSearchInput" placeholder="Type name or barcode..." autocomplete="off"><div id="productSuggestions" class="autocomplete-items hidden"></div></div>
                             </div>
-                            <div class="card"><div class="card-title">Items</div><div class="overflow-x-auto"><table class="items-table"><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr></thead><tbody id="itemsBody"></tbody></table></div></div>
+                            <div class="card"><div class="card-title">Items</div><div class="overflow-x-auto"><table class="items-table"><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th><tr></thead><tbody id="itemsBody"></tbody></table></div></div>
                         </div>
                         <div class="summary-card">
                             <div class="card-title">Order summary</div>
@@ -147,9 +147,9 @@
             </div>
 
             <!-- History, Customers, Movements, Workers, Settings -->
-            <div id="historyTab" class="tab-content hidden"><div class="card"><div class="card-title">All Invoices</div><div class="overflow-x-auto"></table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody id="historyTbody"></tbody></table></div></div></div>
+            <div id="historyTab" class="tab-content hidden"><div class="card"><div class="card-title">All Invoices</div><div class="overflow-x-auto"><table><thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Actions</th></tr></thead><tbody id="historyTbody"></tbody></tr></div></div></div>
             <div id="customersTab" class="tab-content hidden"><div class="card"><div class="card-title">Customers</div><div id="customersList"></div></div></div>
-            <div id="movementsTab" class="tab-content hidden"><div class="card"><div class="card-title">Stock Movements</div><div class="overflow-x-auto"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>User</th></tr></thead><tbody id="movementsTbody"></tbody></tr></div></div></div>
+            <div id="movementsTab" class="tab-content hidden"><div class="card"><div class="card-title">Stock Movements</div><div class="overflow-x-auto"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>User</th></tr></thead><tbody id="movementsTbody"></tbody></table></div></div></div>
             <div id="workersTab" class="tab-content hidden"><div class="card"><div class="card-title">Workers</div><div id="workersList"></div><div style="margin-top:1rem;"><input type="text" id="newWorkerName" placeholder="Worker name"><button id="addWorkerBtn" class="btn btn-primary">Add</button></div></div></div>
             <div id="settingsTab" class="tab-content hidden"><div class="card"><div class="card-title">Settings</div><div id="settingsForm"></div><button id="saveSettingsBtn" class="btn btn-primary mt-2">Save</button></div></div>
         </main>
@@ -157,11 +157,11 @@
 </div>
 
 <div id="toast" class="toast"></div>
-<div id="addProductModal" class="modal-overlay"><div class="product-form"><h2>Add Product</h2><div id="addProductMsg"></div><label>Barcode</label><input type="text" id="newBarcode"><button id="scanBarcodeBtn" class="btn btn-outline">Scan</button><div id="barcodeScannerContainer" class="scanner-container" style="display:none;"></div><label>Name</label><input type="text" id="newProductName"><label>Price</label><input type="number" id="newRetailPrice"><label>Stock</label><input type="number" id="newStock" value="0"><div style="margin-top:1rem;"><button id="saveNewProduct" class="btn btn-primary">Save</button><button id="cancelAddProduct" class="btn btn-outline">Cancel</button></div></div></div>
+<div id="addProductModal" class="modal-overlay"><div class="product-form"><h2>Add Product</h2><div id="addProductMsg" style="color:red;"></div><label>Barcode *</label><input type="text" id="newBarcode"><button id="scanBarcodeBtn" class="btn btn-outline">Scan</button><div id="barcodeScannerContainer" class="scanner-container" style="display:none;"></div><label>Name *</label><input type="text" id="newProductName"><label>Price *</label><input type="number" id="newRetailPrice"><label>Stock</label><input type="number" id="newStock" value="0"><div style="margin-top:1rem;"><button id="saveNewProduct" class="btn btn-primary">Save</button><button id="cancelAddProduct" class="btn btn-outline">Cancel</button></div></div></div>
 
 <script>
     // ==================== CONFIGURATION ====================
-    const API_URL = "https://script.google.com/macros/s/AKfycbwRbZWFnku1MsCY8upgJ1wded0Wr_tc_0aXEVuZC1uNx3wNQ-hjehXy-DCWAqDJEw7xRw/exec"; // YOUR APPS SCRIPT URL
+    const API_URL = "https://script.google.com/macros/s/YOUR_APP_SCRIPT_URL_HERE/exec"; // REPLACE WITH YOUR NEW URL
     const IMGBB_API_KEY = "31c5a3faf2dad607b733f9a3a34500bd";
     let currentUser = null;
     let currentPassword = null;
@@ -178,7 +178,7 @@
         for (let k in extra) if (extra.hasOwnProperty(k)) payload.append(k, typeof extra[k] === "object" ? JSON.stringify(extra[k]) : extra[k]);
         const resp = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: payload });
         const text = await resp.text();
-        try { const json = JSON.parse(text); if (!json.success) throw new Error(json.error); return json; } catch(e) { throw new Error(text.substring(0,100)); }
+        try { const json = JSON.parse(text); if (!json.success) throw new Error(json.error); return json; } catch(e) { console.error("API response:", text); throw new Error(e.message); }
     }
 
     function toast(msg, type='') { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast show'+(type?' '+type:''); setTimeout(() => t.className = 'toast', 3000); }
@@ -195,7 +195,15 @@
                 document.getElementById('mainApp').style.display = 'block';
                 document.getElementById('roleBadge').innerText = currentUser.role.toUpperCase();
                 if (currentUser.role !== 'admin') document.querySelectorAll('[data-tab="workers"]').forEach(el => el.style.display = 'none');
-                loadDashboard(); loadProducts(); loadHistory(); loadCustomers(); loadMovements(); loadWorkers(); loadWorkersSelect(); loadSettings(); loadInvoiceData();
+                await loadDashboard(); 
+                await loadProducts(); 
+                await loadHistory(); 
+                await loadCustomers(); 
+                await loadMovements(); 
+                await loadWorkers(); 
+                await loadWorkersSelect(); 
+                await loadSettings(); 
+                await loadInvoiceData();
                 document.querySelector('.nav-item[data-tab="dashboard"]').click();
             } else {
                 document.getElementById('loginError').innerText = "Invalid credentials";
@@ -240,20 +248,27 @@
             const res = await apiCall("getProducts");
             products = res.products || [];
             const search = document.getElementById('searchProduct')?.value.toLowerCase() || '';
-            const filtered = products.filter(p => p.name.toLowerCase().includes(search) || p.barcode.includes(search));
+            const filtered = products.filter(p => p.name.toLowerCase().includes(search) || (p.barcode && p.barcode.toLowerCase().includes(search)));
             document.getElementById('productsTbody').innerHTML = filtered.map(p => `
-                <td>${p.barcode}侧<td style="text-align:center">${p.image_url?`<img src="${p.image_url}" width="40" height="40" style="border-radius:8px;">`:'-'}侧<td class="${p.stock<=p.min_stock?'text-red-600':''}">${p.name}侧<td>${p.stock}侧<td>${formatCurrency(p.selling_price)}侧
-                <td><button class="editStockBtn btn btn-outline text-xs" data-sku="${p.sku}">Edit Stock</button>侧
-            `).join('');
+                <tr><td style="white-space: nowrap;">${p.barcode}</td>
+                <td>${p.image_url ? `<img src="${p.image_url}" width="40" height="40" style="border-radius:8px;">` : '-'}</td>
+                <td>${p.name}</td>
+                <td>${p.stock}</td>
+                <td>${formatCurrency(p.selling_price)}</td>
+                <td><button class="editStockBtn btn btn-outline text-xs" data-sku="${p.sku}">Edit Stock</button></td>
+            </tr>`).join('');
             document.querySelectorAll('.editStockBtn').forEach(btn => btn.onclick = async () => {
                 const ns = prompt('Enter new stock quantity:');
-                if (ns !== null) {
-                    const change = parseInt(ns) - products.find(p=>p.sku===btn.dataset.sku).stock;
+                if (ns !== null && !isNaN(parseInt(ns))) {
+                    const currentStock = products.find(p=>p.sku===btn.dataset.sku).stock;
+                    const change = parseInt(ns) - currentStock;
                     if (change !== 0) {
                         try {
                             await apiCall("updateStock", { sku: btn.dataset.sku, change: change });
                             toast('Stock updated', 'success');
-                            loadProducts(); loadDashboard(); loadMovements();
+                            await loadProducts(); 
+                            await loadDashboard(); 
+                            await loadMovements();
                         } catch(e) { toast(e.message, 'error'); }
                     }
                 }
@@ -267,8 +282,8 @@
     if(searchInput) {
         searchInput.addEventListener('input', () => {
             const q = searchInput.value.trim().toLowerCase();
-            if(!q) { suggestionsDiv.classList.add('hidden'); return; }
-            const matches = products.filter(p => p.name.toLowerCase().includes(q) || p.barcode.includes(q));
+            if(!q || !products.length) { suggestionsDiv.classList.add('hidden'); return; }
+            const matches = products.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.toLowerCase().includes(q)));
             suggestionsDiv.innerHTML = matches.slice(0,8).map(p => `<div class="autocomplete-item" data-barcode="${p.barcode}" data-name="${p.name}" data-price="${p.selling_price}">${p.name} (${p.barcode}) - ${formatCurrency(p.selling_price)}</div>`).join('');
             suggestionsDiv.classList.remove('hidden');
         });
@@ -283,12 +298,16 @@
     function renderInvoiceItems() {
         const tbody = document.getElementById('itemsBody');
         if(!currentItems.length) { tbody.innerHTML = '<tr><td colspan="6">No items added</td></tr>'; recalcTotals(); return; }
-        tbody.innerHTML = currentItems.map((item,idx) => `<tr>
-            <td>${idx+1}侧<td><strong>${item.name}</strong><br><small>${item.barcode}</small>侧
-            <td><div style="display:flex;"><button class="qty-dec" data-idx="${idx}">-</button><input type="number" class="qty-val" data-idx="${idx}" value="${item.qty}" min="1" style="width:60px;"><button class="qty-inc" data-idx="${idx}">+</button></div>侧
-            <td>${formatCurrency(item.price)}侧<td>${formatCurrency(item.price*item.qty)}侧
-            <td><button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button>侧
-        </tr>`).join('');
+        tbody.innerHTML = currentItems.map((item,idx) => `
+            <tr>
+                <td>${idx+1}</td>
+                <td><strong>${item.name}</strong><br><small>${item.barcode}</small></td>
+                <td><div style="display:flex;"><button class="qty-dec" data-idx="${idx}">-</button><input type="number" class="qty-val" data-idx="${idx}" value="${item.qty}" min="1" style="width:60px;"><button class="qty-inc" data-idx="${idx}">+</button></div></td>
+                <td>${formatCurrency(item.price)}</td>
+                <td>${formatCurrency(item.price*item.qty)}</td>
+                <td><button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
         document.querySelectorAll('.qty-dec').forEach(btn => btn.onclick = () => { let idx=parseInt(btn.dataset.idx); if(currentItems[idx].qty>1) currentItems[idx].qty--; renderInvoiceItems(); });
         document.querySelectorAll('.qty-inc').forEach(btn => btn.onclick = () => { let idx=parseInt(btn.dataset.idx); currentItems[idx].qty++; renderInvoiceItems(); });
         document.querySelectorAll('.qty-val').forEach(inp => inp.onchange = () => { let idx=parseInt(inp.dataset.idx); let v=parseInt(inp.value); if(v>0) currentItems[idx].qty=v; renderInvoiceItems(); });
@@ -341,7 +360,7 @@
             toast(`Invoice ${res.invoice_no} saved`);
             products = (await apiCall("getProducts")).products;
             resetInvoiceForm();
-            loadHistory(); loadDashboard(); loadProducts(); loadCustomers(); loadMovements();
+            await loadHistory(); await loadDashboard(); await loadProducts(); await loadCustomers(); await loadMovements();
         } catch(e) { toast(e.message,'error'); }
     }
     function resetInvoiceForm() {
@@ -385,7 +404,7 @@
             <div class="invoice-header"><h1>${settings.storeName||'StockPulse'}</h1><p>Invoice</p></div>
             <div class="invoice-details"><div><strong>Invoice No:</strong> ${document.getElementById('invoiceNo').value}</div><div><strong>Date:</strong> ${document.getElementById('invoiceDate').value}</div></div>
             <div class="customer-details"><div><strong>Customer:</strong> ${document.getElementById('custName').value || 'Walk-in'}</div><div><strong>Phone:</strong> ${document.getElementById('custPhone').value || '-'}</div></div>
-            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${currentItems.map(i => `<td>${i.name}侧侧${formatCurrency(i.price)}侧${formatCurrency(i.price*i.qty)}侧</tr>`).join('')}</tbody></table>
+            <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${currentItems.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>${formatCurrency(i.price)}</td><td>${formatCurrency(i.price*i.qty)}</td></tr>`).join('')}</tbody></table>
             <div class="totals"><p>Subtotal: ${document.getElementById('subtotal').innerText}</p><p>Discount: ${document.getElementById('discountAmount').innerText}</p><p>Tax: ${document.getElementById('taxAmount').innerText}</p><h3>Grand Total: ${document.getElementById('grandTotal').innerText}</h3><p>Paid: ${formatCurrency(document.getElementById('received').value)} | Change: ${document.getElementById('changeDue').innerText}</p></div>
             <div class="footer">${settings.thankYouMsg || 'Thank you for your business!'}</div>
         </div></body></html>`);
@@ -394,7 +413,7 @@
     }
 
     // ========== SCANNERS ==========
-    async function startInvoiceScanner() { if(scanner) await stopInvoiceScanner(); const container = document.getElementById('scannerContainer'); container.style.display='block'; container.innerHTML='<div id="invoice-reader" style="width:100%"></div>'; document.getElementById('scannerControl').style.display='flex'; scanner = new Html5Qrcode('invoice-reader'); try { await scanner.start({ facingMode:'environment' }, { fps:15, qrbox:{width:250,height:250} }, (decoded) => { const prod = products.find(p=>p.barcode===decoded); if(prod) addProductToInvoice(prod.barcode,prod.name,prod.selling_price); else toast('Not found','error'); }, () => {}); } catch(e){ toast('Camera error','error'); stopInvoiceScanner(); } }
+    async function startInvoiceScanner() { if(scanner) await stopInvoiceScanner(); const container = document.getElementById('scannerContainer'); container.style.display='block'; container.innerHTML='<div id="invoice-reader" style="width:100%"></div>'; document.getElementById('scannerControl').style.display='flex'; scanner = new Html5Qrcode('invoice-reader'); try { await scanner.start({ facingMode:'environment' }, { fps:15, qrbox:{width:250,height:250} }, (decoded) => { const prod = products.find(p=>p.barcode===decoded); if(prod) addProductToInvoice(prod.barcode,prod.name,prod.selling_price); else toast('Product not found','error'); }, () => {}); } catch(e){ toast('Camera error','error'); stopInvoiceScanner(); } }
     async function stopInvoiceScanner() { if(scanner) { try{ await scanner.stop(); await scanner.clear(); }catch(e){} scanner=null; } document.getElementById('scannerContainer').style.display='none'; document.getElementById('scannerControl').style.display='none'; }
 
     async function startAddProductScanner() { if(addProductScanner) await stopAddProductScanner(); const c = document.getElementById('barcodeScannerContainer'); c.style.display='block'; c.innerHTML='<div id="add-reader" style="width:100%"></div>'; addProductScanner = new Html5Qrcode('add-reader'); try { await addProductScanner.start({facingMode:'environment'},{fps:15,qrbox:{width:250,height:250}},(decoded)=>{ document.getElementById('newBarcode').value = decoded; stopAddProductScanner(); toast('Scanned'); },()=>{}); } catch(e){ toast('Camera error','error'); stopAddProductScanner(); } }
@@ -403,33 +422,33 @@
     async function stopInventoryScanner() { if(inventoryScanner) { try{ await inventoryScanner.stop(); await inventoryScanner.clear(); }catch(e){} inventoryScanner=null; } }
 
     // ========== OTHER MODULES ==========
-    async function loadHistory() { const inv = await apiCall("getInvoices"); document.getElementById('historyTbody').innerHTML = (inv.invoices||[]).map(i => `<tr><td>${i.invoice_id}侧<td>${new Date(i.date).toLocaleDateString()}侧<td>${i.customer_name}侧<td>${formatCurrency(i.total)}侧<td><button class="printHistoryBtn btn btn-outline text-xs" data-id="${i.invoice_id}">Print</button>侧</tr>`).join(''); document.querySelectorAll('.printHistoryBtn').forEach(btn => btn.onclick = () => printInvoiceById(btn.dataset.id)); }
+    async function loadHistory() { const inv = await apiCall("getInvoices"); document.getElementById('historyTbody').innerHTML = (inv.invoices||[]).map(i => `<tr><td>${i.invoice_id}</td><td>${new Date(i.date).toLocaleDateString()}</td><td>${i.customer_name}</td><td>${formatCurrency(i.total)}</td><td><button class="printHistoryBtn btn btn-outline text-xs" data-id="${i.invoice_id}">Print</button></td></tr>`).join(''); document.querySelectorAll('.printHistoryBtn').forEach(btn => btn.onclick = async () => { const id = btn.dataset.id; try { const invData = await apiCall("getInvoiceById", { invoiceId: id }); printInvoiceById(invData); } catch(e) { toast(e.message,'error'); } }); }
     async function loadCustomers() { const c = await apiCall("getCustomers"); document.getElementById('customersList').innerHTML = (c.customers||[]).map(cu => `<div class="border-b py-2"><strong>${cu.name}</strong><br>${cu.phone}<br>${cu.total_purchases} invoices · ${formatCurrency(cu.total_spent)}</div>`).join(''); }
-    async function loadMovements() { const m = await apiCall("getStockMovements"); document.getElementById('movementsTbody').innerHTML = (m.movements||[]).map(mv => `<tr><td>${new Date(mv.timestamp).toLocaleString()}侧<td>${mv.product_id}侧<td>${mv.type}侧<td>${mv.qty}侧<td>${mv.user||'-'}侧</tr>`).join(''); }
+    async function loadMovements() { const m = await apiCall("getStockMovements"); document.getElementById('movementsTbody').innerHTML = (m.movements||[]).map(mv => `<tr><td>${new Date(mv.timestamp).toLocaleString()}</td><td>${mv.product_id}</td><td>${mv.type}</td><td>${mv.qty}</td><td>${mv.user||'-'}</td></tr>`).join(''); }
     async function loadWorkers() { const w = await apiCall("getWorkers"); document.getElementById('workersList').innerHTML = (w.workers||[]).map(wk => `<div class="border-b py-2">${wk}</div>`).join(''); }
-    async function addWorker() { const name = document.getElementById('newWorkerName').value.trim(); if(!name) return; await apiCall("addWorker", { workerName: name }); toast('Worker added'); loadWorkers(); }
+    async function addWorker() { const name = document.getElementById('newWorkerName').value.trim(); if(!name) return; await apiCall("addWorker", { workerName: name }); toast('Worker added'); await loadWorkers(); await loadWorkersSelect(); document.getElementById('newWorkerName').value = ''; }
     async function loadWorkersSelect() { const w = await apiCall("getWorkers"); const sel = document.getElementById('workerSelect'); sel.innerHTML = (w.workers||[]).map(wk => `<option>${wk}</option>`).join(''); }
     async function loadSettings() { const s = await apiCall("getSettings"); settings = s.settings || {}; document.getElementById('settingsForm').innerHTML = `<div><label>Store Name</label><input id="storeName" value="${settings.shop_name||''}"></div><div><label>Currency</label><input id="currency" value="${settings.currency||'USD'}"></div><div><label>Tax (%)</label><input id="taxRateSetting" value="${settings.tax_rate||0}"></div><div><label>Next Invoice #</label><input id="nextInvoiceNum" value="${settings.next_invoice_number||1001}"></div>`; }
-    async function saveSettings() { const updates = { shop_name: document.getElementById('storeName').value, currency: document.getElementById('currency').value, tax_rate: parseFloat(document.getElementById('taxRateSetting').value), next_invoice_number: parseInt(document.getElementById('nextInvoiceNum').value) }; await apiCall("updateSettings", { settings: updates }); toast('Saved'); loadSettings(); }
-    async function saveNewProduct() { let barcode = document.getElementById('newBarcode').value.trim(); let name = document.getElementById('newProductName').value.trim(); let price = parseFloat(document.getElementById('newRetailPrice').value); if(!barcode || !name || isNaN(price)) { toast('Fill all','error'); return; } let prodData = { sku: barcode, name, barcode, image_url: '', selling_price: price, stock: parseInt(document.getElementById('newStock').value)||0 }; try { await apiCall("addProduct", prodData); toast('Product added'); document.getElementById('addProductModal').classList.remove('active'); loadProducts(); loadDashboard(); } catch(e) { toast(e.message,'error'); } }
+    async function saveSettings() { const updates = { shop_name: document.getElementById('storeName').value, currency: document.getElementById('currency').value, tax_rate: parseFloat(document.getElementById('taxRateSetting').value), next_invoice_number: parseInt(document.getElementById('nextInvoiceNum').value) }; await apiCall("updateSettings", { settings: updates }); toast('Saved'); await loadSettings(); await loadInvoiceData(); }
+    async function saveNewProduct() { let barcode = document.getElementById('newBarcode').value.trim(); let name = document.getElementById('newProductName').value.trim(); let price = parseFloat(document.getElementById('newRetailPrice').value); if(!barcode || !name || isNaN(price)) { document.getElementById('addProductMsg').innerText = 'Barcode, Name, and Price are required'; return; } let prodData = { sku: barcode, name, barcode, image_url: '', selling_price: price, stock: parseInt(document.getElementById('newStock').value)||0 }; try { await apiCall("addProduct", prodData); toast('Product added'); document.getElementById('addProductModal').classList.remove('active'); await loadProducts(); await loadDashboard(); } catch(e) { document.getElementById('addProductMsg').innerText = e.message; } }
 
     // ========== EVENT BINDINGS ==========
     document.getElementById('loginBtn').onclick = () => login(document.getElementById('loginEmail').value.trim(), document.getElementById('loginPassword').value);
     document.getElementById('logoutBtn').onclick = logout;
-    document.querySelectorAll('[data-tab]').forEach(btn => btn.onclick = () => {
+    document.querySelectorAll('[data-tab]').forEach(btn => btn.onclick = async () => {
         let tab = btn.dataset.tab;
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.getElementById(tab+'Tab').classList.remove('hidden');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         btn.classList.add('active');
-        if(tab==='dashboard') loadDashboard();
-        if(tab==='inventory') loadProducts();
-        if(tab==='history') loadHistory();
-        if(tab==='customers') loadCustomers();
-        if(tab==='movements') loadMovements();
-        if(tab==='workers') { loadWorkers(); loadWorkersSelect(); }
-        if(tab==='settings') loadSettings();
-        if(tab==='invoice') { loadInvoiceData(); renderInvoiceItems(); }
+        if(tab==='dashboard') await loadDashboard();
+        if(tab==='inventory') await loadProducts();
+        if(tab==='history') await loadHistory();
+        if(tab==='customers') await loadCustomers();
+        if(tab==='movements') await loadMovements();
+        if(tab==='workers') { await loadWorkers(); await loadWorkersSelect(); }
+        if(tab==='settings') await loadSettings();
+        if(tab==='invoice') { await loadInvoiceData(); renderInvoiceItems(); }
     });
     document.getElementById('addProductBtn').onclick = () => document.getElementById('addProductModal').classList.add('active');
     document.getElementById('scanInventoryBtn').onclick = startInventoryScanner;
