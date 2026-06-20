@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>StockPulse | Complete POS System</title>
+  <title>StockPulse | Enterprise POS</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -452,21 +452,33 @@ async function reprintInvoiceFromDetail() {
   win.document.close(); win.print();
 }
 
-// ========== HISTORY ==========
+// ========== HISTORY (with Void button) ==========
 async function loadHistory() {
   try { const res = await apiCall("getInvoices"); const invoices = res.invoices || [];
     const canCollect = ["admin","manager"].includes(currentUser.role);
-    document.getElementById("historyTbody").innerHTML = invoices.map(i => `
-      <tr class="border-b"><td class="p-2">#${i.invoice_id}</td>
+    const canVoid = ["admin","manager"].includes(currentUser.role);
+    document.getElementById("historyTbody").innerHTML = invoices.map(i => {
+      const statusColor = i.status==='paid'?'bg-green-100 text-green-700':i.status==='partial'?'bg-amber-100 text-amber-700':i.status==='voided'?'bg-gray-100 text-gray-500':'bg-red-100 text-red-700';
+      return `<tr class="border-b"><td class="p-2">#${i.invoice_id}</td>
       <td class="p-2">${fdate(i.date)}</td>
       <td class="p-2">${i.customer_name||'-'}</td>
       <td class="p-2">${fc(i.total)}</td>
       <td class="p-2 text-green-600">${fc(i.paid)}</td>
       <td class="p-2 text-red-500">${fc(i.due)}</td>
-      <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs ${i.status==='paid'?'bg-green-100 text-green-700':i.status==='partial'?'bg-amber-100 text-amber-700':'bg-red-100 text-red-700'}">${i.status||'-'}</span></td>
-      <td class="p-2 flex gap-1"><button class="viewInvoiceBtn bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}">View</button>${canCollect && (i.due||0)>0 ? `<button class="collectDueBtn bg-orange-50 text-orange-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}" data-due="${i.due}">Collect</button>` : ''}</td></tr>`).join("");
+      <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs ${statusColor}">${i.status||'-'}</span></td>
+      <td class="p-2 flex gap-1 flex-wrap">
+        <button class="viewInvoiceBtn bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}">View</button>
+        ${canCollect && (i.due||0)>0 && i.status!=='voided' ? `<button class="collectDueBtn bg-orange-50 text-orange-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}" data-due="${i.due}">Collect</button>` : ''}
+        ${canVoid && i.status!=='voided' ? `<button class="voidInvoiceBtn bg-red-50 text-red-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}">Void</button>` : ''}
+      </td></tr>`;
+    }).join("");
     document.querySelectorAll(".viewInvoiceBtn").forEach(btn => btn.onclick = () => viewInvoiceDetail(btn.dataset.id));
     document.querySelectorAll(".collectDueBtn").forEach(btn => btn.onclick = () => openCollectDue(btn.dataset.id, btn.dataset.due));
+    document.querySelectorAll(".voidInvoiceBtn").forEach(btn => btn.onclick = async () => {
+      if (confirm("Void this invoice? Stock will be restored.")) {
+        try { await apiCall("voidInvoice", { invoiceId: btn.dataset.id }); toast("Invoice voided","success"); await loadHistory(); await loadDashboard(); } catch(e){ toast(e.message,"error"); }
+      }
+    });
   } catch(e) { toast(e.message,"error"); }
 }
 function openCollectDue(invoiceId, due) { document.getElementById("dueInvoiceNo").textContent = invoiceId; document.getElementById("dueAmount").textContent = fc(due); document.getElementById("collectAmount").value = due; document.getElementById("collectDueModal").classList.add("active"); document.getElementById("confirmCollectBtn").onclick = async () => { const amt = parseFloat(document.getElementById("collectAmount").value)||0; try { await apiCall("collectDue",{invoice_id:invoiceId,amount:amt}); toast("Due collected","success"); document.getElementById("collectDueModal").classList.remove("active"); await loadHistory(); await loadDashboard(); } catch(e){toast(e.message,"error");} }; }
@@ -653,6 +665,3 @@ window.addEventListener("load", () => {
   if (t && u) { sessionToken = t; currentUser = JSON.parse(u); initApp(); }
   else { checkFirstRun(); }
 });
-</script>
-</body>
-</html>
