@@ -2,660 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>StockPulse | Enterprise POS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StockPulse Login</title>
   <style>
-    * { font-family: 'Inter', sans-serif; }
-    body { background: #f4f6f9; }
-    .sidebar-item.active { background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
-    .sidebar-item { transition: all 0.2s; cursor: pointer; }
-    .sidebar-item:hover:not(.active) { background: #1f2937; color: #e5e7eb; transform: translateX(4px); }
-    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.15); }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content; center; z-index: 1000; visibility: hidden; opacity: 0; transition: all 0.2s; }
-    .modal-overlay.active { visibility: visible; opacity: 1; }
-    .modal-container { background: white; border-radius: 1.5rem; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
-    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 0.75rem 1.5rem; border-radius: 9999px; font-size: 0.875rem; z-index: 9999; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
-    .toast.show { opacity: 1; }
-    .toast.error { background: #ef4444; }
-    .toast.success { background: #10b981; }
-    .autocomplete-items { position: absolute; background: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; max-height: 200px; overflow-y: auto; z-index: 20; width: 100%; margin-top: 0.25rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .autocomplete-item { padding: 0.5rem 1rem; cursor: pointer; }
-    .autocomplete-item:hover { background: #f3f4f6; }
-    .scanner-container { overflow: hidden; border-radius: 0.75rem; background: black; }
-    @media (max-width: 768px) {
-      .sidebar { position: static !important; width: 100% !important; height: auto !important; flex-direction: row !important; flex-wrap: wrap !important; padding: 0.5rem !important; }
-      .sidebar-item { display: inline-flex; width: auto; margin: 0.25rem; }
-      .main { margin-left: 0 !important; }
-      .modal-container { width: 95%; }
-      .toast { white-space: normal; max-width: 90%; text-align: center; }
-    }
+    body { font-family: system-ui; background: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .login-box { background: white; padding: 2rem; border-radius: 1.5rem; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15); width: 100%; max-width: 400px; }
+    .login-box h2 { text-align: center; margin-bottom: 1.5rem; }
+    .login-box input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #cbd5e1; border-radius: 0.75rem; }
+    .login-box button { width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 0.75rem; font-weight: bold; cursor: pointer; }
+    .login-box button:hover { background: #4338ca; }
+    .error { color: #dc2626; text-align: center; margin-top: 0.5rem; }
+    #status { margin-top: 0.5rem; text-align: center; font-size: 0.9rem; color: #4b5563; }
   </style>
 </head>
 <body>
 
-<!-- FIRST-RUN SETUP OVERLAY -->
-<div id="setupOverlay" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50" style="display: none;">
-  <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
-    <div class="text-center mb-6">
-      <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-        <i class="fas fa-crown text-white text-2xl"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-800">Welcome to Stock<span class="text-indigo-600">Pulse</span></h2>
-      <p class="text-gray-500 text-sm">First‑time setup – create admin account</p>
-    </div>
-    <input type="text" id="setupFullName" placeholder="Full Name" class="w-full p-3 border border-gray-200 rounded-xl mb-3">
-    <input type="email" id="setupEmail" placeholder="Email" class="w-full p-3 border border-gray-200 rounded-xl mb-3">
-    <input type="password" id="setupPassword" placeholder="Password" class="w-full p-3 border border-gray-200 rounded-xl mb-5">
-    <button id="setupBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition">Create Admin & Continue</button>
-    <div id="setupError" class="text-red-500 text-sm text-center mt-3"></div>
-  </div>
+<div class="login-box">
+  <h2>📦 StockPulse</h2>
+  <input type="email" id="email" placeholder="Email" value="admin@yourstore.com">
+  <input type="password" id="password" placeholder="Password" value="admin123">
+  <button id="loginBtn">Sign In →</button>
+  <div id="error" class="error"></div>
+  <div id="status"></div>
 </div>
-
-<!-- LOGIN OVERLAY -->
-<div id="loginOverlay" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50" style="display: flex;">
-  <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl">
-    <div class="text-center mb-6">
-      <div class="w-16 h-16 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-        <i class="fas fa-chart-line text-white text-2xl"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-800">Stock<span class="text-indigo-600">Pulse</span></h2>
-      <p class="text-gray-500 text-sm">Enterprise POS System</p>
-    </div>
-    <input type="email" id="loginEmail" placeholder="Email" class="w-full p-3 border border-gray-200 rounded-xl mb-3" autocomplete="email" value="admin@yourstore.com">
-    <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border border-gray-200 rounded-xl mb-5" autocomplete="current-password" value="admin123">
-    <button id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition">Sign In →</button>
-    <div id="loginError" class="text-red-500 text-sm text-center mt-3"></div>
-  </div>
-</div>
-
-<!-- MAIN APP (hidden until login) -->
-<div id="mainApp" style="display: none;">
-  <div class="flex min-h-screen">
-    <aside class="sidebar fixed w-72 bg-gray-900 flex flex-col h-full overflow-y-auto z-10" style="min-height: 100vh;">
-      <div class="p-5 border-b border-gray-800">
-        <div class="flex items-center gap-2">
-          <i class="fas fa-cubes text-indigo-400 text-xl"></i>
-          <span class="text-xl font-bold text-white">Stock<span class="text-indigo-400">Pulse</span></span>
-        </div>
-      </div>
-      <nav class="flex-1 py-4 px-3 space-y-1" id="sidebarNav"></nav>
-      <div class="p-4 border-t border-gray-800">
-        <div class="text-xs text-gray-400 mb-2"><i class="fas fa-shield-alt mr-1"></i>Role: <span id="roleBadge" class="text-white font-semibold">—</span></div>
-        <div class="text-xs text-gray-400 mb-3" id="userNameBadge"></div>
-        <button id="logoutBtn" class="w-full py-2 border border-gray-700 rounded-xl text-gray-300 hover:bg-gray-800 transition text-sm">Logout</button>
-      </div>
-    </aside>
-    <main class="main flex-1 ml-72 p-6 bg-gray-50 min-h-screen">
-      <div class="flex justify-between items-center mb-6">
-        <h1 id="pageTitle" class="text-2xl font-bold text-gray-800"><i class="fas fa-tachometer-alt text-indigo-600 mr-2"></i> Dashboard</h1>
-        <div class="flex items-center gap-3"><select id="workerSelect" class="bg-white border border-gray-200 rounded-full px-4 py-2 text-sm shadow-sm"></select></div>
-      </div>
-
-      <!-- DASHBOARD -->
-      <div id="dashboardTab">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="statsGrid"></div>
-        <div class="bg-white rounded-2xl shadow-sm p-5 mb-6">
-          <h3 class="font-semibold text-gray-700 mb-4"><i class="fas fa-chart-line text-indigo-500 mr-2"></i> Weekly Revenue</h3>
-          <canvas id="revenueChart" height="180"></canvas>
-        </div>
-        <div class="grid md:grid-cols-2 gap-4">
-          <div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i> Low Stock</h3><div id="lowStockList" class="space-y-2"></div></div>
-          <div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-clock text-blue-500 mr-2"></i> Recent Invoices</h3><div id="recentInvoices" class="space-y-2"></div></div>
-        </div>
-      </div>
-
-      <!-- PRODUCTS -->
-      <div id="inventoryTab" class="hidden">
-        <div class="bg-white rounded-2xl shadow-sm p-5">
-          <div class="flex flex-wrap gap-3 mb-4">
-            <input type="text" id="searchProduct" placeholder="Search by name or barcode..." class="flex-1 border border-gray-200 rounded-xl px-4 py-2">
-            <button id="addProductBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i> Add Product</button>
-            <button id="scanInventoryBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm"><i class="fas fa-camera mr-1"></i> Scan</button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50 border-b">
-                <tr><th class="text-left py-3 px-2">Barcode</th><th>Image</th><th>Name</th><th>Stock</th><th>Buy</th><th>Sell</th><th>Actions</th></tr>
-              </thead>
-              <tbody id="productsTbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- INVOICE -->
-      <div id="invoiceTab" class="hidden">
-        <div class="bg-white rounded-2xl shadow-sm p-5">
-          <div class="grid grid-cols-2 gap-4 mb-5">
-            <div><label class="block text-xs text-gray-500 mb-1">Invoice No.</label><input type="text" id="invoiceNo" readonly class="w-full bg-gray-50 border rounded-xl px-3 py-2 text-sm"></div>
-            <div><label class="block text-xs text-gray-500 mb-1">Date</label><input type="date" id="invoiceDate" class="w-full border rounded-xl px-3 py-2 text-sm"></div>
-          </div>
-          <div class="grid lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 space-y-4">
-              <div class="border rounded-xl p-4 bg-gray-50">
-                <h4 class="font-semibold text-gray-700 mb-3">Bill To</h4>
-                <div class="grid grid-cols-2 gap-3">
-                  <input type="text" id="custName" placeholder="Customer name" class="border rounded-lg px-3 py-2 text-sm">
-                  <input type="text" id="custPhone" placeholder="Phone" class="border rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div class="grid grid-cols-2 gap-3 mt-2">
-                  <input type="text" id="custAddress" placeholder="Address" class="border rounded-lg px-3 py-2 text-sm">
-                  <input type="text" id="custVat" placeholder="VAT/BIN" class="border rounded-lg px-3 py-2 text-sm">
-                </div>
-                <div id="repeatCustomerBadge" class="text-xs text-indigo-600 mt-2"></div>
-              </div>
-              <div class="border rounded-xl p-4 bg-gray-50">
-                <h4 class="font-semibold text-gray-700 mb-3">Add Products</h4>
-                <div id="scanTrigger" class="bg-white border-2 border-dashed border-gray-300 rounded-xl p-3 text-center cursor-pointer hover:border-indigo-400 transition">
-                  <i class="fas fa-camera text-indigo-500 text-xl"></i>
-                  <p class="text-sm text-gray-500">Tap to scan barcode</p>
-                </div>
-                <div id="scannerContainer" class="hidden mt-3 rounded-xl overflow-hidden bg-black"></div>
-                <div id="scannerControl" class="hidden text-right mt-2"><button id="stopScannerBtn" class="bg-red-500 text-white text-xs px-3 py-1 rounded-full">Close Scanner</button></div>
-                <div class="mt-3 relative">
-                  <input type="text" id="productSearchInput" placeholder="Search product..." class="w-full border rounded-lg px-3 py-2 text-sm">
-                  <div id="productSuggestions" class="autocomplete-items hidden"></div>
-                </div>
-              </div>
-              <div>
-                <h4 class="font-semibold text-gray-700 mb-3">Cart</h4>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-sm">
-                    <thead class="bg-gray-100">
-                      <tr><th class="p-2">#</th><th>Product</th><th>Qty</th><th>Price</th><th>Total</th><th></th></tr>
-                    </thead>
-                    <tbody id="itemsBody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-            <div class="bg-gray-50 rounded-xl p-4 h-fit sticky top-6">
-              <h4 class="font-bold text-gray-800 mb-4">Order Summary</h4>
-              <div class="space-y-2 text-sm">
-                <div class="flex justify-between"><span>Subtotal</span><span id="subtotal">0</span></div>
-                <div class="flex justify-between items-center"><span>Discount</span><div class="flex gap-1"><select id="discountType" class="border rounded text-xs"><option value="percent">%</option><option value="flat">৳</option></select><input type="number" id="discountValue" value="0" class="w-20 border rounded px-2 py-1 text-xs"></div></div>
-                <div class="flex justify-between"><span>Discount amt</span><span id="discountAmount">0</span></div>
-                <div class="flex justify-between items-center"><span>VAT (%)</span><input type="number" id="vatRate" value="0" class="w-20 border rounded px-2 py-1 text-xs"></div>
-                <div class="flex justify-between"><span>VAT amt</span><span id="vatAmount">0</span></div>
-                <div class="flex justify-between font-bold text-base pt-2 border-t"><span>GRAND TOTAL</span><span id="grandTotal">0</span></div>
-                <div class="flex justify-between items-center"><span>Received</span><input type="number" id="received" value="0" class="w-24 border rounded px-2 py-1 text-xs"></div>
-                <div class="flex justify-between"><span>Change</span><span id="changeDue" class="text-green-600 font-semibold">0</span></div>
-                <div><label class="text-xs text-gray-600">Payment Method</label><select id="paymentMethod" class="w-full border rounded-lg px-3 py-2 mt-1 text-sm"><option>Cash</option><option>Card</option><option>bKash</option><option>Nagad</option><option>Rocket</option><option>Bank Transfer</option></select></div>
-                <div class="flex gap-2 mt-4">
-                  <button id="saveInvoiceBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl text-sm"><i class="fas fa-save mr-1"></i> Save</button>
-                  <button id="resetBtn" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl text-sm">Reset</button>
-                </div>
-                <button id="printInvoiceBtn" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 rounded-xl text-sm mt-1"><i class="fas fa-print mr-1"></i> Print Invoice</button>
-                <button id="printMushakBtn" class="w-full bg-green-50 border border-green-300 hover:bg-green-100 text-green-700 py-2 rounded-xl text-sm mt-1"><i class="fas fa-file-alt mr-1"></i> Print Mushak 6.3</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- HISTORY, CUSTOMERS, PURCHASES, EXPENSES, MOVEMENTS, P&L, WORKERS, USERS, SETTINGS -->
-      <div id="historyTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-4">All Invoices</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th class="p-2">Invoice #</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead><tbody id="historyTbody"></tbody></table></div></div></div>
-      <div id="customersTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-4">Customers</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th>Phone</th><th>Name</th><th>Visits</th><th>Total Spent</th><th>Due Balance</th><th>Last Visit</th></tr></thead><tbody id="customersTbody"></tbody></table></div></div></div>
-      <div id="purchasesTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><div class="flex justify-between items-center mb-4"><h3 class="font-semibold text-gray-700">Purchases</h3><button id="addPurchaseBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i>Add Purchase</button></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th>Date</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Cost</th><th>Total</th><th>Paid</th><th>Due</th></tr></thead><tbody id="purchasesTbody"></tbody></table></div></div></div>
-      <div id="expensesTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><div class="flex justify-between items-center mb-4"><h3 class="font-semibold text-gray-700">Expenses</h3><button id="addExpenseBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i>Add Expense</button></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody id="expensesTbody"></tbody></table></div></div></div>
-      <div id="movementsTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-4">Stock Movements</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50"><tr><th>Date</th><th>SKU</th><th>Type</th><th>Qty</th><th>Reason</th><th>User</th></tr></thead><tbody id="movementsTbody"></tbody></table></div></div></div>
-      <div id="plTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5 mb-4"><div class="flex flex-wrap gap-3 items-center mb-5"><h3 class="font-semibold text-gray-700 flex-1">P&L Report</h3><input type="date" id="plFrom" class="border rounded-xl px-3 py-2 text-sm"><input type="date" id="plTo" class="border rounded-xl px-3 py-2 text-sm"><button id="loadPLBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm">Load</button></div><div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="plCards"></div><canvas id="plChart" height="180"></canvas></div></div>
-      <div id="workersTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-4">Workers</h3><div id="workersList" class="space-y-2 mb-4"></div><div class="flex gap-2"><input type="text" id="newWorkerName" placeholder="Worker name" class="flex-1 border rounded-lg px-3 py-2 text-sm"><button id="addWorkerBtn" class="bg-indigo-600 text-white px-4 rounded-xl text-sm">Add</button></div></div></div>
-      <div id="usersTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><div class="flex justify-between items-center mb-4"><h3 class="font-semibold text-gray-700">User Management</h3><button id="addUserBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm"><i class="fas fa-plus mr-1"></i>Add User</button></div><div id="usersList" class="space-y-2"></div></div></div>
-      <div id="settingsTab" class="hidden"><div class="bg-white rounded-2xl shadow-sm p-5"><h3 class="font-semibold text-gray-700 mb-4">Store Settings</h3><div class="grid md:grid-cols-2 gap-4" id="settingsForm"></div><button id="saveSettingsBtn" class="bg-indigo-600 text-white px-5 py-2 rounded-xl mt-5 text-sm">Save Settings</button></div></div>
-    </main>
-  </div>
-</div>
-
-<!-- MODALS -->
-<div id="addProductModal" class="modal-overlay"><div class="modal-container"><h2 class="text-lg font-bold mb-4">Add New Product</h2><div id="addProductMsg" class="text-red-500 text-sm mb-2"></div><div class="grid grid-cols-2 gap-3"><div class="col-span-2"><label class="text-sm font-medium">Barcode *</label><div class="flex gap-2 mt-1"><input type="text" id="newBarcode" class="flex-1 border rounded-lg p-2 text-sm"><button id="scanBarcodeBtn" class="bg-gray-100 px-3 rounded-lg text-sm"><i class="fas fa-camera"></i></button></div><div id="barcodeScannerContainer" class="hidden mt-2 rounded-xl overflow-hidden bg-black"></div></div><div class="col-span-2"><label class="text-sm font-medium">Product Name *</label><input type="text" id="newProductName" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Purchase Price</label><input type="number" id="newPurchasePrice" value="0" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Selling Price *</label><input type="number" id="newRetailPrice" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Initial Stock</label><input type="number" id="newStock" value="0" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Min Stock</label><input type="number" id="newMinStock" value="5" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Category</label><input type="text" id="newCategory" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Supplier</label><input type="text" id="newSupplier" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div class="col-span-2"><label class="text-sm font-medium">Product Image</label><input type="file" id="newProductImage" accept="image/*" class="w-full border rounded-lg p-2 mt-1 text-sm"><img id="newImagePreview" class="hidden w-20 h-20 object-cover rounded mt-2"></div></div><div class="flex gap-3 mt-4"><button id="saveNewProduct" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl text-sm">Save</button><button id="cancelAddProduct" class="flex-1 bg-gray-200 py-2 rounded-xl text-sm">Cancel</button></div></div></div>
-<div id="addPurchaseModal" class="modal-overlay"><div class="modal-container"><h2 class="text-lg font-bold mb-4">Add Purchase</h2><div id="addPurchaseMsg" class="text-red-500 text-sm mb-2"></div><div class="grid grid-cols-2 gap-3"><div class="col-span-2"><label class="text-sm font-medium">Supplier *</label><input type="text" id="purSupplier" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Supplier Ref</label><input type="text" id="purRef" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Product SKU *</label><div class="flex gap-2 mt-1"><input type="text" id="purSku" class="flex-1 border rounded-lg p-2 text-sm"><button id="lookupPurSkuBtn" class="bg-gray-100 px-3 rounded-lg text-sm">Find</button></div></div><div class="col-span-2"><label class="text-sm font-medium">Product Name</label><input type="text" id="purName" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Qty *</label><input type="number" id="purQty" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Cost Price *</label><input type="number" id="purCost" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Total Cost</label><input type="text" id="purTotal" readonly class="w-full bg-gray-50 border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Amount Paid</label><input type="number" id="purPaid" value="0" class="w-full border rounded-lg p-2 mt-1 text-sm"></div></div><div class="flex gap-3 mt-4"><button id="savePurchaseBtn" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl text-sm">Save</button><button id="cancelPurchaseBtn" class="flex-1 bg-gray-200 py-2 rounded-xl text-sm">Cancel</button></div></div></div>
-<div id="addExpenseModal" class="modal-overlay"><div class="modal-container"><h2 class="text-lg font-bold mb-4">Add Expense</h2><div class="space-y-3"><div><label class="text-sm font-medium">Category *</label><select id="expCategory" class="w-full border rounded-lg p-2 mt-1 text-sm"><option>Rent</option><option>Salary</option><option>Utility</option><option>Transport</option><option>Marketing</option><option>Maintenance</option><option>Other</option></select></div><div><label class="text-sm font-medium">Description</label><input type="text" id="expDesc" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Amount *</label><input type="number" id="expAmount" class="w-full border rounded-lg p-2 mt-1 text-sm"></div></div><div class="flex gap-3 mt-4"><button id="saveExpenseBtn" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl text-sm">Save</button><button id="cancelExpenseBtn" class="flex-1 bg-gray-200 py-2 rounded-xl text-sm">Cancel</button></div></div></div>
-<div id="addUserModal" class="modal-overlay"><div class="modal-container"><h2 class="text-lg font-bold mb-4">Add User</h2><div class="space-y-3"><div><label class="text-sm font-medium">Full Name *</label><input type="text" id="newUserName" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Email *</label><input type="email" id="newUserEmail" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Password *</label><input type="password" id="newUserPass" class="w-full border rounded-lg p-2 mt-1 text-sm"></div><div><label class="text-sm font-medium">Role *</label><select id="newUserRole" class="w-full border rounded-lg p-2 mt-1 text-sm"><option value="cashier">Cashier</option><option value="stock_manager">Stock Manager</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div></div><div id="addUserMsg" class="text-red-500 text-sm mt-2"></div><div class="flex gap-3 mt-4"><button id="saveUserBtn" class="flex-1 bg-indigo-600 text-white py-2 rounded-xl text-sm">Save</button><button id="cancelUserBtn" class="flex-1 bg-gray-200 py-2 rounded-xl text-sm">Cancel</button></div></div></div>
-<div id="collectDueModal" class="modal-overlay"><div class="modal-container" style="max-width:360px"><h2 class="text-lg font-bold mb-4">Collect Due Payment</h2><p class="text-sm text-gray-600 mb-3">Invoice: <strong id="dueInvoiceNo"></strong> — Due: <strong id="dueAmount" class="text-red-600"></strong></p><input type="number" id="collectAmount" placeholder="Amount to collect" class="w-full border rounded-lg p-2 mb-3 text-sm"><div class="flex gap-3"><button id="confirmCollectBtn" class="flex-1 bg-green-600 text-white py-2 rounded-xl text-sm">Collect</button><button id="cancelCollectBtn" class="flex-1 bg-gray-200 py-2 rounded-xl text-sm">Cancel</button></div></div></div>
-<div id="invoiceDetailModal" class="modal-overlay"><div class="modal-container" style="max-width:600px"><h2 class="text-lg font-bold mb-3">Invoice Details</h2><div id="detailInvoiceInfo" class="bg-gray-50 p-3 rounded text-sm mb-3"></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-100"><tr><th>Product</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody id="detailItemsBody"></tbody></table></div><div class="flex gap-2 mt-4"><button id="reprintFromDetailBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm">Reprint Invoice</button><button id="closeDetailModal" class="bg-gray-200 px-4 py-2 rounded-xl text-sm">Close</button></div></div></div>
-<div id="toast" class="toast"></div>
 
 <script>
-// ========== CONFIGURATION ==========
+// ========== CONFIG ==========
 const API_URL = "https://script.google.com/macros/s/AKfycbwRbZWFnku1MsCY8upgJ1wded0Wr_tc_0aXEVuZC1uNx3wNQ-hjehXy-DCWAqDJEw7xRw/exec";
-const IMGBB_API_KEY = "31c5a3faf2dad607b733f9a3a34500bd";
-let currentUser = null, sessionToken = null;
-let products = [], currentItems = [], settings = {};
-let scanner = null, addProductScanner = null, inventoryScanner = null;
-let revenueChart = null, plChart = null;
 
-// ========== API ==========
-async function apiCall(action, extra = {}) {
-  const payload = new URLSearchParams();
-  payload.append("action", action);
-  if (sessionToken) payload.append("token", sessionToken);
-  for (let k in extra) if (extra.hasOwnProperty(k)) payload.append(k, typeof extra[k] === "object" ? JSON.stringify(extra[k]) : extra[k]);
-  const resp = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:payload });
-  const text = await resp.text();
-  try { const json = JSON.parse(text); if (!json.success) throw new Error(json.error); return json; } catch(e) { console.error("API:", text); throw new Error(e.message); }
-}
-function toast(msg, type="") { const t = document.getElementById("toast"); t.textContent = msg; t.className = "toast show" + (type ? " " + type : ""); setTimeout(() => t.className = "toast", 3000); }
-function fc(amt) { return `${settings.currency || "৳"}${Number(amt || 0).toFixed(2)}`; }
-function fdate(d) { return d ? new Date(d).toLocaleDateString("en-BD") : "-"; }
+// ========== ELEMENTS ==========
+const email = document.getElementById('email');
+const password = document.getElementById('password');
+const loginBtn = document.getElementById('loginBtn');
+const errorDiv = document.getElementById('error');
+const statusDiv = document.getElementById('status');
 
-// ========== FIRST-RUN & LOGIN ==========
-async function checkFirstRun() {
-  try { await apiCall("getUserInfo", { email: "admin@yourstore.com", password: "admin123" }); showLogin(); } catch(e) { showSetup(); }
-}
-function showSetup() { document.getElementById("setupOverlay").style.display = "flex"; document.getElementById("loginOverlay").style.display = "none"; }
-function showLogin() { document.getElementById("setupOverlay").style.display = "none"; document.getElementById("loginOverlay").style.display = "flex"; }
-async function createAdmin() {
-  const fullName = document.getElementById("setupFullName").value.trim();
-  const email = document.getElementById("setupEmail").value.trim();
-  const password = document.getElementById("setupPassword").value;
-  if (!fullName || !email || !password) { document.getElementById("setupError").textContent = "All fields required"; return; }
+// ========== LOGIN FUNCTION ==========
+async function login() {
+  errorDiv.textContent = '';
+  statusDiv.textContent = '⏳ Logging in...';
+  loginBtn.disabled = true;
+
   try {
-    const res = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body: new URLSearchParams({ action:"setupAdmin", email, password, fullName }) });
-    const json = JSON.parse(await res.text());
-    if (!json.success) throw new Error(json.error);
-    toast("Admin created. Please login.", "success");
-    showLogin();
-  } catch(e) { document.getElementById("setupError").textContent = e.message; }
-}
-async function login(email, password) {
-  try {
-    const res = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body: new URLSearchParams({ action:"login", email, password }) });
-    const json = JSON.parse(await res.text());
-    if (!json.success) { document.getElementById("loginError").textContent = json.error; return; }
-    sessionToken = json.token;
-    currentUser = json.user;
-    sessionStorage.setItem("sp_token", sessionToken);
-    sessionStorage.setItem("sp_user", JSON.stringify(currentUser));
-    initApp();
-  } catch(e) { document.getElementById("loginError").textContent = e.message; }
-}
-function logout() { currentUser = null; sessionToken = null; sessionStorage.clear(); document.getElementById("mainApp").style.display = "none"; document.getElementById("loginOverlay").style.display = "flex"; if(scanner) stopInvoiceScanner(); }
-
-// ========== INIT & SIDEBAR ==========
-function initApp() {
-  document.getElementById("loginOverlay").style.display = "none";
-  document.getElementById("mainApp").style.display = "block";
-  document.getElementById("roleBadge").textContent = currentUser.role.toUpperCase();
-  document.getElementById("userNameBadge").textContent = currentUser.fullName || currentUser.email;
-  buildSidebar(); document.querySelector('.sidebar-item[data-tab="dashboard"]').click(); loadWorkerSelect();
-}
-function buildSidebar() {
-  const navMap = [
-    { tab:"dashboard", icon:"fas fa-tachometer-alt", label:"Dashboard", roles:["admin","manager","cashier","stock_manager"] },
-    { tab:"inventory", icon:"fas fa-boxes", label:"Products", roles:["admin","manager","stock_manager"] },
-    { tab:"invoice", icon:"fas fa-file-invoice-dollar", label:"New Invoice", roles:["admin","manager","cashier"] },
-    { tab:"history", icon:"fas fa-history", label:"Invoices", roles:["admin","manager","cashier"] },
-    { tab:"customers", icon:"fas fa-users", label:"Customers", roles:["admin","manager","cashier"] },
-    { tab:"purchases", icon:"fas fa-truck", label:"Purchases", roles:["admin","manager","stock_manager"] },
-    { tab:"expenses", icon:"fas fa-receipt", label:"Expenses", roles:["admin","manager"] },
-    { tab:"movements", icon:"fas fa-exchange-alt", label:"Stock Mov.", roles:["admin","manager","stock_manager"] },
-    { tab:"pl", icon:"fas fa-chart-pie", label:"P&L Report", roles:["admin","manager"] },
-    { tab:"workers", icon:"fas fa-user-friends", label:"Workers", roles:["admin"] },
-    { tab:"users", icon:"fas fa-user-shield", label:"Users", roles:["admin"] },
-    { tab:"settings", icon:"fas fa-cog", label:"Settings", roles:["admin"] }
-  ];
-  const container = document.getElementById("sidebarNav");
-  container.innerHTML = "";
-  for (const item of navMap) {
-    if (item.roles.includes(currentUser.role)) {
-      const div = document.createElement("div");
-      div.className = "sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-300 hover:bg-gray-800 cursor-pointer transition";
-      div.setAttribute("data-tab", item.tab);
-      div.innerHTML = `<i class="${item.icon} w-5"></i><span>${item.label}</span>`;
-      div.onclick = () => switchTab(item.tab);
-      container.appendChild(div);
-    }
-  }
-}
-async function switchTab(tab) {
-  document.querySelectorAll("[id$='Tab']").forEach(t => t.classList.add("hidden"));
-  const el = document.getElementById(tab + "Tab");
-  if (el) el.classList.remove("hidden");
-  document.querySelectorAll(".sidebar-item").forEach(i => i.classList.remove("active"));
-  document.querySelector(`.sidebar-item[data-tab="${tab}"]`).classList.add("active");
-  document.getElementById("pageTitle").innerHTML = `<i class="${document.querySelector(`.sidebar-item[data-tab="${tab}"] i`).className} text-indigo-600 mr-2"></i> ${document.querySelector(`.sidebar-item[data-tab="${tab}"] span`).textContent}`;
-  if (tab === "dashboard")  await loadDashboard();
-  if (tab === "inventory")  await loadProducts();
-  if (tab === "history")    await loadHistory();
-  if (tab === "customers")  await loadCustomers();
-  if (tab === "purchases")  await loadPurchases();
-  if (tab === "expenses")   await loadExpenses();
-  if (tab === "movements")  await loadMovements();
-  if (tab === "pl")         initPL();
-  if (tab === "workers")    await loadWorkers();
-  if (tab === "users")      await loadUsers();
-  if (tab === "settings")   await loadSettings();
-  if (tab === "invoice")    { await loadInvoiceData(); renderInvoiceItems(); }
-}
-
-// ========== DASHBOARD ==========
-async function loadDashboard() {
-  try {
-    const [stats, low, inv] = await Promise.all([
-      apiCall("getDashboardStats"),
-      apiCall("getLowStock"),
-      apiCall("getInvoices")
-    ]);
-    const monthProfit = (stats.month_revenue || 0) - (stats.month_expenses || 0);
-    document.getElementById("statsGrid").innerHTML = `
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold text-indigo-600">${stats.total_products||0}</div><div>Products</div></div>
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold text-red-500">${stats.low_stock_count||0}</div><div>Low Stock</div></div>
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold text-green-600">${fc(stats.today_sales)}</div><div>Today Sales</div></div>
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold text-purple-600">${fc(stats.total_due)}</div><div>Total Due</div></div>
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold text-blue-600">${fc(stats.month_revenue)}</div><div>Month Revenue</div></div>
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold text-orange-600">${fc(stats.month_expenses)}</div><div>Month Expenses</div></div>
-      <div class="bg-white rounded-xl p-4 shadow-sm card-hover"><div class="text-3xl font-bold ${monthProfit>=0?'text-emerald-600':'text-red-600'}">${fc(monthProfit)}</div><div>Net Profit</div></div>`;
-    document.getElementById("lowStockList").innerHTML = (low.low_stock||[]).map(p => `<div class="flex justify-between p-2 bg-gray-50 rounded"><span>${p.name}</span><span class="text-red-500 font-semibold">${p.stock}/${p.min}</span></div>`).join('') || '<div>✅ All good</div>';
-    document.getElementById("recentInvoices").innerHTML = (inv.invoices||[]).slice(0,5).map(i => `<div class="flex justify-between p-2 bg-gray-50 rounded"><span>#${i.invoice_id}</span><span>${i.customer_name||'-'}</span><span>${fc(i.total)}</span></div>`).join('');
-    const dailyRev = Array(7).fill(0);
-    const today = new Date();
-    (inv.invoices||[]).forEach(inv => {
-      const d = new Date(inv.date);
-      const diff = Math.floor((today - d) / 86400000);
-      if (diff >=0 && diff<7) dailyRev[6-diff] += inv.total||0;
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        action: 'login',
+        email: email.value.trim(),
+        password: password.value
+      })
     });
-    if (revenueChart) revenueChart.destroy();
-    revenueChart = new Chart(document.getElementById("revenueChart").getContext("2d"), { type:"line", data:{ labels:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], datasets:[{ label:"Revenue", data:dailyRev, borderColor:"#4f46e5", backgroundColor:"rgba(79,70,229,0.08)", tension:0.3, fill:true }] }, options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
-  } catch(e) { toast(e.message,"error"); }
-}
 
-// ========== PRODUCTS ==========
-async function loadProducts() {
-  try {
-    const res = await apiCall("getProducts");
-    products = res.products || [];
-    renderProductsTable(products);
-    document.getElementById("searchProduct").oninput = () => {
-      const q = document.getElementById("searchProduct").value.toLowerCase();
-      renderProductsTable(products.filter(p => (p.name||"").toLowerCase().includes(q) || (p.barcode||"").toLowerCase().includes(q)));
-    };
-  } catch(e) { toast(e.message,"error"); }
-}
-function renderProductsTable(list) {
-  const canEdit = ["admin","manager","stock_manager"].includes(currentUser.role);
-  document.getElementById("productsTbody").innerHTML = list.map(p => `
-    <tr class="border-b"><td class="py-2 px-2 text-xs">${p.barcode||'-'}</td>
-    <td class="py-2 px-2">${p.image_url ? `<img src="${p.image_url}" class="w-10 h-10 rounded-lg object-cover">` : '-'}</td>
-    <td class="py-2 px-2 font-medium">${p.name||'-'}</td>
-    <td class="py-2 px-2 ${(p.stock||0)<=(p.min_stock||0)?'text-red-600 font-bold':''}">${p.stock||0}</td>
-    <td class="py-2 px-2 text-gray-500">${fc(p.purchase_price)}</td>
-    <td class="py-2 px-2">${fc(p.selling_price)}</td>
-    <td class="py-2 px-2">${canEdit ? `<button class="editStockBtn bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs" data-sku="${p.sku}" data-stock="${p.stock||0}">Edit Stock</button>` : ''}</td></tr>`).join("");
-  if (canEdit) document.querySelectorAll(".editStockBtn").forEach(btn => btn.onclick = async () => {
-    const ns = prompt("New stock quantity:");
-    if (ns && !isNaN(parseInt(ns))) {
-      const change = parseInt(ns) - parseInt(btn.dataset.stock);
-      if(change!==0) try{ await apiCall("updateStock",{sku:btn.dataset.sku,change}); toast("Stock updated","success"); await loadProducts(); } catch(e){ toast(e.message,"error"); }
+    const text = await response.text();
+    console.log('Raw response:', text);
+
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      throw new Error('Server returned invalid response');
     }
-  });
-}
-async function saveNewProduct() {
-  const barcode = document.getElementById("newBarcode").value.trim(), name = document.getElementById("newProductName").value.trim(), price = parseFloat(document.getElementById("newRetailPrice").value);
-  if (!barcode || !name || isNaN(price)) { document.getElementById("addProductMsg").textContent = "Barcode, Name, and Price required"; return; }
-  let imageUrl = "";
-  const fileInput = document.getElementById("newProductImage");
-  if (fileInput.files.length > 0) {
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-    const base64 = await new Promise((resolve) => { reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(file); });
-    const uploadRes = await apiCall("uploadImage", { imageBase64: base64 });
-    if (!uploadRes.success) throw new Error(uploadRes.error);
-    imageUrl = uploadRes.url;
-    document.getElementById("newImagePreview").src = imageUrl;
-    document.getElementById("newImagePreview").classList.remove("hidden");
+
+    if (!json.success) {
+      throw new Error(json.error || 'Login failed');
+    }
+
+    // Success
+    statusDiv.textContent = '✅ Login successful! Token: ' + json.token.substring(0, 20) + '...';
+    errorDiv.textContent = '';
+    // Store token and user
+    sessionStorage.setItem('sp_token', json.token);
+    sessionStorage.setItem('sp_user', JSON.stringify(json.user));
+    // Redirect to full dashboard (if you have one)
+    // window.location.href = 'dashboard.html';
+
+  } catch (err) {
+    errorDiv.textContent = '❌ ' + err.message;
+    statusDiv.textContent = '';
+  } finally {
+    loginBtn.disabled = false;
   }
-  const prodData = { sku: barcode, barcode, name, image_url: imageUrl, purchase_price: parseFloat(document.getElementById("newPurchasePrice").value)||0, selling_price: price, stock: parseInt(document.getElementById("newStock").value)||0, min_stock: parseInt(document.getElementById("newMinStock").value)||5, category: document.getElementById("newCategory").value, supplier: document.getElementById("newSupplier").value };
-  try { await apiCall("addProduct", prodData); toast("Product added","success"); document.getElementById("addProductModal").classList.remove("active"); await loadProducts(); } catch(e) { document.getElementById("addProductMsg").textContent = e.message; }
 }
 
-// ========== INVOICE ==========
-async function loadInvoiceData() {
-  try { const s = await apiCall("getSettings"); settings = s.settings || {}; const year = new Date().getFullYear(); document.getElementById("invoiceNo").value = `INV-${year}-${String(settings.next_invoice_number||1001).padStart(5,"0")}`; document.getElementById("invoiceDate").value = new Date().toISOString().slice(0,10); document.getElementById("vatRate").value = settings.tax_rate || 0; } catch(e) { console.error(e); }
-}
-document.getElementById("productSearchInput").addEventListener("input", function() {
-  const q = this.value.trim().toLowerCase();
-  const div = document.getElementById("productSuggestions");
-  if (!q || !products.length) { div.classList.add("hidden"); return; }
-  const matches = products.filter(p => (p.name||"").toLowerCase().includes(q) || (p.barcode||"").toLowerCase().includes(q));
-  div.innerHTML = matches.slice(0,8).map(p => `<div class="autocomplete-item" data-sku="${p.sku}" data-barcode="${p.barcode}" data-name="${p.name}" data-price="${p.selling_price}">${p.name} (${p.barcode}) — ${fc(p.selling_price)}</div>`).join("");
-  div.classList.remove("hidden");
-});
-document.getElementById("productSuggestions").addEventListener("mousedown", e => { const item = e.target.closest(".autocomplete-item"); if(!item) return; e.preventDefault(); addToCart(item.dataset.sku, item.dataset.barcode, item.dataset.name, parseFloat(item.dataset.price)); document.getElementById("productSearchInput").value = ""; document.getElementById("productSuggestions").classList.add("hidden"); });
-function addToCart(sku,barcode,name,price) { const existing = currentItems.find(i=>i.sku===sku); if(existing) existing.qty++; else currentItems.push({ sku,barcode,name,price,qty:1 }); renderInvoiceItems(); toast(`Added: ${name}`); }
-function renderInvoiceItems() {
-  const tbody = document.getElementById("itemsBody");
-  if (!currentItems.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-400">No items added</td></tr>'; recalcTotals(); return; }
-  tbody.innerHTML = currentItems.map((item,idx) => `
-    <tr class="border-b"><td class="p-1">${idx+1}</td>
-    <td><div class="font-medium">${item.name}</div><div class="text-xs text-gray-400">${item.barcode||item.sku}</div></td>
-    <td><div class="flex items-center gap-1"><button class="qty-dec w-6 h-6 rounded-full bg-gray-100" data-idx="${idx}">-</button><input type="number" class="qty-val w-12 text-center border rounded" data-idx="${idx}" value="${item.qty}" min="1"><button class="qty-inc w-6 h-6 rounded-full bg-gray-100" data-idx="${idx}">+</button></div></td>
-    <td>${fc(item.price)}</td>
-    <td class="font-semibold">${fc(item.price*item.qty)}</td>
-    <td><button class="remove-item text-red-400 hover:text-red-600" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></td></tr>`).join("");
-  attachCartEvents();
-}
-function attachCartEvents() {
-  document.querySelectorAll(".qty-dec").forEach(b => b.onclick = () => { if(currentItems[b.dataset.idx].qty>1) currentItems[b.dataset.idx].qty--; renderInvoiceItems(); });
-  document.querySelectorAll(".qty-inc").forEach(b => b.onclick = () => { currentItems[b.dataset.idx].qty++; renderInvoiceItems(); });
-  document.querySelectorAll(".qty-val").forEach(i => i.onchange = () => { const v=parseInt(i.value); if(v>0) currentItems[i.dataset.idx].qty=v; renderInvoiceItems(); });
-  document.querySelectorAll(".remove-item").forEach(b => b.onclick = () => { currentItems.splice(b.dataset.idx,1); renderInvoiceItems(); });
-}
-function recalcTotals() {
-  const subtotal = currentItems.reduce((s,i)=>s+i.price*i.qty,0);
-  const discType = document.getElementById("discountType").value;
-  const discVal  = parseFloat(document.getElementById("discountValue").value)||0;
-  const discount = discType==="percent" ? subtotal*discVal/100 : discVal;
-  const afterDisc = subtotal - discount;
-  const vatRate   = parseFloat(document.getElementById("vatRate").value)||0;
-  const vat       = afterDisc * vatRate/100;
-  const total     = afterDisc + vat;
-  const received  = parseFloat(document.getElementById("received").value)||0;
-  const change    = received - total;
-  document.getElementById("subtotal").innerHTML = fc(subtotal);
-  document.getElementById("discountAmount").innerHTML = fc(discount);
-  document.getElementById("vatAmount").innerHTML = fc(vat);
-  document.getElementById("grandTotal").innerHTML = fc(total);
-  document.getElementById("changeDue").innerHTML = fc(change >=0 ? change : 0);
-  document.getElementById("changeDue").style.color = change <0 ? "red" : "#059669";
-}
-async function saveInvoice() {
-  if (!currentItems.length) { toast("No items in cart","error"); return; }
-  for (const item of currentItems) {
-    const prod = products.find(p=>p.sku===item.sku||p.barcode===item.barcode);
-    if (!prod || (prod.stock||0) < item.qty) { toast(`Insufficient stock: ${item.name}`,"error"); return; }
-  }
-  const subtotal = currentItems.reduce((s,i)=>s+i.price*i.qty,0);
-  const discType = document.getElementById("discountType").value, discVal=parseFloat(document.getElementById("discountValue").value)||0, discount = discType==="percent"? subtotal*discVal/100 : discVal;
-  const afterDisc = subtotal - discount, vatRate=parseFloat(document.getElementById("vatRate").value)||0, vat = afterDisc * vatRate/100, total = afterDisc + vat, paid = parseFloat(document.getElementById("received").value)||0;
-  const invoiceData = { customer_name: document.getElementById("custName").value.trim()||"Walk-in", customer_phone: document.getElementById("custPhone").value.trim(), customer_address:document.getElementById("custAddress").value.trim(), vat_no: document.getElementById("custVat").value.trim(), subtotal, discount, tax: vat, total, paid, due: Math.max(0,total-paid), payment_method: document.getElementById("paymentMethod").value, items: currentItems.map(i=>({sku:i.sku||i.barcode, name:i.name, qty:i.qty, unit_price:i.price})) };
-  try { const res = await apiCall("createInvoice",{invoiceData}); toast(`Invoice #${res.invoice_no} saved!`,"success"); products = (await apiCall("getProducts")).products; resetInvoiceForm(); await loadDashboard(); } catch(e){ toast(e.message,"error"); }
-}
-function resetInvoiceForm() { currentItems = []; renderInvoiceItems(); ["custName","custPhone","custAddress","custVat","productSearchInput"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";}); document.getElementById("received").value="0"; document.getElementById("discountValue").value="0"; document.getElementById("repeatCustomerBadge").innerHTML=""; loadInvoiceData(); }
-function printInvoice() { if(!currentItems.length){toast("No items to print","error");return;}
-  const subtotal = currentItems.reduce((s,i)=>s+i.price*i.qty,0);
-  const discVal=parseFloat(document.getElementById("discountValue").value)||0;
-  const discount = document.getElementById("discountType").value==="percent" ? subtotal*discVal/100 : discVal;
-  const vat = parseFloat(document.getElementById("vatAmount").innerHTML.replace(/[^\d.]/g,""))||0;
-  const total = subtotal - discount + vat;
-  const win=window.open("","_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Invoice</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;font-size:12px;}.header{text-align:center;margin-bottom:20px;}h1{font-size:20px;margin:0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;}th{background:#f5f5f5;}.totals{text-align:right;margin-top:10px;}.footer{text-align:center;margin-top:20px;font-size:11px;color:#666;}@media print{body{margin:0;}}</style></head><body><div class="header"><h1>${settings.shop_name||"StockPulse"}</h1><p>${settings.shop_address||""}</p><p>VAT Reg: ${settings.vat_reg||"N/A"} | Phone: ${settings.shop_phone||""}</p><hr><p><strong>Invoice #${document.getElementById("invoiceNo").value}</strong> | Date: ${document.getElementById("invoiceDate").value}</p></div><p><strong>Customer:</strong> ${document.getElementById("custName").value||"Walk-in"} | <strong>Phone:</strong> ${document.getElementById("custPhone").value||"-"}</p>${document.getElementById("custVat").value ? `<p><strong>Customer VAT/BIN:</strong> ${document.getElementById("custVat").value}</p>` : ""}<table><thead><tr><th>#</th><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${currentItems.map((i,idx)=>`<tr><td>${idx+1}</td><td>${i.name}</td><td>${i.qty}</td><td>${fc(i.price)}</td><td>${fc(i.price*i.qty)}</td></tr>`).join("")}</tbody></table><div class="totals"><p>Subtotal: ${fc(subtotal)}</p>${discount>0?`<p>Discount: -${fc(discount)}</p>`:""}${vat>0?`<p>VAT (${document.getElementById("vatRate").value}%): ${fc(vat)}</p>`:""}<p><strong>TOTAL: ${fc(total)}</strong></p><p>Paid: ${fc(document.getElementById("received").value)} | Change: ${document.getElementById("changeDue").innerHTML}</p><p>Payment: ${document.getElementById("paymentMethod").value}</p></div><div class="footer">${settings.thank_you_msg||"Thank you for your business!"}</div></body></html>`);
-  win.document.close(); win.print();
-}
-function printMushak() { if(!currentItems.length){toast("No items to print","error");return;}
-  const subtotal = currentItems.reduce((s,i)=>s+i.price*i.qty,0);
-  const vatRate  = parseFloat(document.getElementById("vatRate").value)||0;
-  const vat      = subtotal * vatRate/100;
-  const win=window.open("","_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Mushak 6.3</title><style>body{font-family:Arial,sans-serif;margin:20px;font-size:11px;}h2{text-align:center;font-size:14px;}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:10px 0;border:1px solid #000;padding:8px;}table{width:100%;border-collapse:collapse;margin:10px 0;border:1px solid #000;}th,td{border:1px solid #000;padding:4px 6px;text-align:left;font-size:11px;}th{background:#f0f0f0;text-align:center;}.sig{display:flex;justify-content:space-between;margin-top:30px;}.sig div{text-align:center;border-top:1px solid #000;padding-top:5px;width:150px;}@media print{body{margin:0;}}</style></head><body><h2>মূল্য সংযোজন কর চালানপত্র</h2><h2>(Mushak-6.3)</h2><div class="info-grid"><div><strong>সরবরাহকারীর নাম:</strong> ${settings.shop_name||""}</div><div><strong>BIN:</strong> ${settings.vat_reg||""}</div><div><strong>ঠিকানা:</strong> ${settings.shop_address||""}</div><div><strong>চালান নং:</strong> ${document.getElementById("invoiceNo").value}</div><div><strong>ক্রেতার নাম:</strong> ${document.getElementById("custName").value||"Walk-in"}</div><div><strong>তারিখ:</strong> ${document.getElementById("invoiceDate").value}</div><div><strong>ক্রেতার BIN:</strong> ${document.getElementById("custVat").value||"N/A"}</div><div><strong>ফোন:</strong> ${document.getElementById("custPhone").value||"-"}</div></div><table><thead><tr><th>ক্রমিক</th><th>পণ্যের বিবরণ</th><th>পরিমাণ</th><th>একক মূল্য</th><th>মোট মূল্য</th><th>ভ্যাট (${vatRate}%)</th></tr></thead><tbody>${currentItems.map((i,idx)=>`<tr><td style="text-align:center">${idx+1}</td><td>${i.name}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${fc(i.price)}</td><td style="text-align:right">${fc(i.price*i.qty)}</td><td style="text-align:right">${fc(i.price*i.qty*vatRate/100)}</td></tr>`).join("")}<tr><td colspan="4" style="text-align:right"><strong>মোট</strong></td><td style="text-align:right"><strong>${fc(subtotal)}</strong></td><td style="text-align:right"><strong>${fc(vat)}</strong></td></tr></tbody></table><p><strong>সর্বমোট (ভ্যাটসহ): ${fc(subtotal+vat)}</strong></p><div class="sig"><div>ক্রেতার স্বাক্ষর</div><div>বিক্রেতার স্বাক্ষর</div></div></body></html>`);
-  win.document.close(); win.print();
-}
+// ========== EVENT LISTENER ==========
+loginBtn.addEventListener('click', login);
 
-// ========== INVOICE DETAIL & REPRINT ==========
-async function viewInvoiceDetail(invoiceId) {
-  try {
-    const invRes = await apiCall("getInvoices");
-    const invoice = (invRes.invoices||[]).find(i => String(i.invoice_id) === String(invoiceId));
-    if (!invoice) { toast("Invoice not found","error"); return; }
-    const itemsRes = await apiCall("getInvoiceItems", { invoiceId });
-    document.getElementById("detailInvoiceInfo").innerHTML = `<div><strong>Invoice #:</strong> ${invoice.invoice_id}</div><div><strong>Date:</strong> ${new Date(invoice.date).toLocaleString()}</div><div><strong>Customer:</strong> ${invoice.customer_name||'-'}</div><div><strong>Total:</strong> ${fc(invoice.total)} | <strong>Paid:</strong> ${fc(invoice.paid)} | <strong>Due:</strong> ${fc(invoice.due)}</div>`;
-    document.getElementById("detailItemsBody").innerHTML = (itemsRes.items||[]).map(it => `<tr><td>${it.product_name||it.sku}</td><td class="text-center">${it.qty}</td><td>${fc(it.unit_price)}</td><td>${fc(it.qty*it.unit_price)}</td></tr>`).join("");
-    window._reprintInvoiceData = invoice;
-    document.getElementById("invoiceDetailModal").classList.add("active");
-  } catch(e) { toast(e.message,"error"); }
-}
-async function reprintInvoiceFromDetail() {
-  if (!window._reprintInvoiceData) return;
-  const inv = window._reprintInvoiceData;
-  const itemsRes = await apiCall("getInvoiceItems", { invoiceId: inv.invoice_id });
-  const items = itemsRes.items || [];
-  const win = window.open("","_blank");
-  win.document.write(`<!DOCTYPE html><html><head><title>Reprint Invoice</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;font-size:12px;}.header{text-align:center;margin-bottom:20px;}h1{font-size:20px;margin:0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;}th{background:#f5f5f5;}.totals{text-align:right;margin-top:10px;}.footer{text-align:center;margin-top:20px;font-size:11px;color:#666;}@media print{body{margin:0;}}</style></head><body><div class="header"><h1>${settings.shop_name||"StockPulse"}</h1><p>${settings.shop_address||""}</p><p>VAT Reg: ${settings.vat_reg||"N/A"} | Phone: ${settings.shop_phone||""}</p><hr><p><strong>Invoice #${inv.invoice_id}</strong> | Date: ${new Date(inv.date).toLocaleDateString()}</p></div><p><strong>Customer:</strong> ${inv.customer_name||"Walk-in"} | <strong>Phone:</strong> ${inv.customer_phone||"-"}</p>${inv.vat_no?`<p><strong>Customer VAT/BIN:</strong> ${inv.vat_no}</p>`:""}<table><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${items.map(it=>`<tr><td>${it.product_name||it.sku}</td><td>${it.qty}</td><td>${fc(it.unit_price)}</td><td>${fc(it.qty*it.unit_price)}</td></tr>`).join("")}</tbody></table><div class="totals"><p>Subtotal: ${fc(inv.subtotal)}</p><p>Discount: ${fc(inv.discount)}</p><p>VAT: ${fc(inv.tax)}</p><p><strong>TOTAL: ${fc(inv.total)}</strong></p><p>Paid: ${fc(inv.paid)} | Due: ${fc(inv.due)}</p><p>Payment: ${inv.payment_method}</p></div><div class="footer">${settings.thank_you_msg||"Thank you!"}</div></body></html>`);
-  win.document.close(); win.print();
-}
+// Allow Enter key on both fields
+email.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+password.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+</script>
 
-// ========== HISTORY ==========
-async function loadHistory() {
-  try { const res = await apiCall("getInvoices"); const invoices = res.invoices || [];
-    const canCollect = ["admin","manager"].includes(currentUser.role);
-    const canVoid = ["admin","manager"].includes(currentUser.role);
-    document.getElementById("historyTbody").innerHTML = invoices.map(i => {
-      const statusColor = i.status==='paid'?'bg-green-100 text-green-700':i.status==='partial'?'bg-amber-100 text-amber-700':i.status==='voided'?'bg-gray-100 text-gray-500':'bg-red-100 text-red-700';
-      return `<tr class="border-b"><td class="p-2">#${i.invoice_id}</td>
-      <td class="p-2">${fdate(i.date)}</td>
-      <td class="p-2">${i.customer_name||'-'}</td>
-      <td class="p-2">${fc(i.total)}</td>
-      <td class="p-2 text-green-600">${fc(i.paid)}</td>
-      <td class="p-2 text-red-500">${fc(i.due)}</td>
-      <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs ${statusColor}">${i.status||'-'}</span></td>
-      <td class="p-2 flex gap-1 flex-wrap">
-        <button class="viewInvoiceBtn bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}">View</button>
-        ${canCollect && (i.due||0)>0 && i.status!=='voided' ? `<button class="collectDueBtn bg-orange-50 text-orange-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}" data-due="${i.due}">Collect</button>` : ''}
-        ${canVoid && i.status!=='voided' ? `<button class="voidInvoiceBtn bg-red-50 text-red-600 px-2 py-1 rounded text-xs" data-id="${i.invoice_id}">Void</button>` : ''}
-      </td></tr>`;
-    }).join("");
-    document.querySelectorAll(".viewInvoiceBtn").forEach(btn => btn.onclick = () => viewInvoiceDetail(btn.dataset.id));
-    document.querySelectorAll(".collectDueBtn").forEach(btn => btn.onclick = () => openCollectDue(btn.dataset.id, btn.dataset.due));
-    document.querySelectorAll(".voidInvoiceBtn").forEach(btn => btn.onclick = async () => {
-      if (confirm("Void this invoice? Stock will be restored.")) {
-        try { await apiCall("voidInvoice", { invoiceId: btn.dataset.id }); toast("Invoice voided","success"); await loadHistory(); await loadDashboard(); } catch(e){ toast(e.message,"error"); }
-      }
-    });
-  } catch(e) { toast(e.message,"error"); }
-}
-function openCollectDue(invoiceId, due) { document.getElementById("dueInvoiceNo").textContent = invoiceId; document.getElementById("dueAmount").textContent = fc(due); document.getElementById("collectAmount").value = due; document.getElementById("collectDueModal").classList.add("active"); document.getElementById("confirmCollectBtn").onclick = async () => { const amt = parseFloat(document.getElementById("collectAmount").value)||0; try { await apiCall("collectDue",{invoice_id:invoiceId,amount:amt}); toast("Due collected","success"); document.getElementById("collectDueModal").classList.remove("active"); await loadHistory(); await loadDashboard(); } catch(e){toast(e.message,"error");} }; }
-
-// ========== CUSTOMERS ==========
-async function loadCustomers() {
-  try { const res = await apiCall("getCustomersWithDue"); const customers = res.customers || [];
-    document.getElementById("customersTbody").innerHTML = customers.map(c => `
-      <tr class="border-b"><td class="p-2">${c.phone||'-'}</td>
-      <td class="p-2">${c.name||'-'}</td>
-      <td class="p-2">${c.total_purchases||0}</td>
-      <td class="p-2">${fc(c.total_spent)}</td>
-      <td class="p-2 text-red-500">${fc(c.due||0)}</td>
-      <td class="p-2">${fdate(c.last_visit)}</td></tr>`).join("");
-  } catch(e) { toast(e.message,"error"); }
-}
-
-// ========== PURCHASES ==========
-async function loadPurchases() {
-  try { const res = await apiCall("getPurchases"); document.getElementById("purchasesTbody").innerHTML = (res.purchases||[]).map(p => `
-    <tr class="border-b"><td class="p-2">${fdate(p.date)}</td>
-    <td class="p-2">${p.supplier||'-'}</td>
-    <td class="p-2">${p.product_name||p.product_sku||'-'}</td>
-    <td class="p-2">${p.qty||0}</td>
-    <td class="p-2">${fc(p.cost_price)}</td>
-    <td class="p-2">${fc(p.total_cost)}</td>
-    <td class="p-2 text-green-600">${fc(p.paid)}</td>
-    <td class="p-2 text-red-500">${fc(p.due)}</td></tr>`).join("");
-  } catch(e) { toast(e.message,"error"); }
-}
-function lookupPurSku() {
-  const sku = document.getElementById("purSku").value.trim();
-  const prod = products.find(p=>p.sku===sku||p.barcode===sku);
-  if (prod) { document.getElementById("purName").value = prod.name; toast("Product found"); }
-  else toast("SKU not found","warning");
-}
-async function addPurchase() {
-  const data = { supplier:document.getElementById("purSupplier").value.trim(), invoice_ref:document.getElementById("purRef").value.trim(), sku:document.getElementById("purSku").value.trim(), product_name:document.getElementById("purName").value.trim(), qty:document.getElementById("purQty").value, cost_price:document.getElementById("purCost").value, paid:document.getElementById("purPaid").value };
-  if (!data.supplier||!data.sku||!data.qty||!data.cost_price){document.getElementById("addPurchaseMsg").textContent="Supplier, SKU, Qty, and Cost required";return;}
-  try { await apiCall("addPurchase",data); toast("Purchase added","success"); document.getElementById("addPurchaseModal").classList.remove("active"); await loadPurchases(); await loadProducts(); } catch(e){toast(e.message,"error");}
-}
-
-// ========== EXPENSES ==========
-async function loadExpenses() {
-  try { const res = await apiCall("getExpenses"); document.getElementById("expensesTbody").innerHTML = (res.expenses||[]).map(e => `
-    <tr class="border-b"><td class="p-2">${fdate(e.date)}</td>
-    <td class="p-2"><span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs">${e.category||'-'}</span></td>
-    <td class="p-2">${e.description||'-'}</td>
-    <td class="p-2 font-semibold">${fc(e.amount)}</td></tr>`).join("");
-  } catch(e) { toast(e.message,"error"); }
-}
-async function addExpense() {
-  const amt = parseFloat(document.getElementById("expAmount").value);
-  if(isNaN(amt)||amt<=0){toast("Enter a valid amount","error");return;}
-  try { await apiCall("addExpense",{category:document.getElementById("expCategory").value,description:document.getElementById("expDesc").value,amount:amt}); toast("Expense saved","success"); document.getElementById("addExpenseModal").classList.remove("active"); await loadExpenses(); } catch(e){toast(e.message,"error");}
-}
-
-// ========== MOVEMENTS ==========
-async function loadMovements() {
-  try { const res = await apiCall("getStockMovements"); document.getElementById("movementsTbody").innerHTML = (res.movements||[]).map(m => `
-    <tr class="border-b"><td class="p-2">${fdate(m.timestamp)}</td>
-    <td class="p-2">${m.sku||'-'}</td>
-    <td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs ${m.type==='IN'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${m.type}</span></td>
-    <td class="p-2">${m.qty||0}</td>
-    <td class="p-2">${m.reason||'-'}</td>
-    <td class="p-2">${m.user||'-'}</td></tr>`).join("");
-  } catch(e) { toast(e.message,"error"); }
-}
-
-// ========== P&L ==========
-function initPL() { const now = new Date(); document.getElementById("plFrom").value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10); document.getElementById("plTo").value = now.toISOString().slice(0,10); }
-async function loadPL() {
-  try { const from = document.getElementById("plFrom").value, to = document.getElementById("plTo").value; const res = await apiCall("getPL",{from,to});
-    document.getElementById("plCards").innerHTML = `<div class="bg-blue-50 rounded-xl p-4"><div class="text-xl font-bold text-blue-700">${fc(res.revenue)}</div><div class="text-xs text-blue-500">Revenue</div></div><div class="bg-orange-50 rounded-xl p-4"><div class="text-xl font-bold text-orange-700">${fc(res.cogs)}</div><div class="text-xs text-orange-500">COGS</div></div><div class="bg-purple-50 rounded-xl p-4"><div class="text-xl font-bold text-purple-700">${fc(res.gross_profit)}</div><div class="text-xs text-purple-500">Gross Profit</div></div><div class="bg-red-50 rounded-xl p-4"><div class="text-xl font-bold text-red-700">${fc(res.expenses)}</div><div class="text-xs text-red-500">Expenses</div></div><div class="${res.net_profit>=0?'bg-green-50':'bg-red-50'} rounded-xl p-4"><div class="text-xl font-bold ${res.net_profit>=0?'text-green-700':'text-red-700'}">${fc(res.net_profit)}</div><div class="text-xs ${res.net_profit>=0?'text-green-500':'text-red-500'}">Net Profit</div></div>`;
-    const daily = res.daily_revenue || {};
-    if(plChart) plChart.destroy();
-    plChart = new Chart(document.getElementById("plChart").getContext("2d"), { type:"bar", data:{ labels:Object.keys(daily), datasets:[{label:"Revenue",data:Object.values(daily),backgroundColor:"rgba(79,70,229,0.7)",borderRadius:4}] }, options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } } });
-  } catch(e) { toast(e.message,"error"); }
-}
-
-// ========== WORKERS ==========
-async function loadWorkers() {
-  try { const res = await apiCall("getWorkers"); document.getElementById("workersList").innerHTML = (res.workers||[]).map(w => `<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><span><i class="fas fa-user-circle text-gray-400 mr-2"></i>${w}</span></div>`).join(""); } catch(e) { toast(e.message,"error"); } }
-async function loadWorkerSelect() { try { const res = await apiCall("getWorkers"); const sel = document.getElementById("workerSelect"); sel.innerHTML = `<option>Select Worker</option>` + (res.workers||[]).map(w=>`<option>${w}</option>`).join(""); } catch(e) {} }
-async function addWorker() { const name = document.getElementById("newWorkerName").value.trim(); if(!name) return; try { await apiCall("addWorker",{workerName:name}); toast("Worker added","success"); document.getElementById("newWorkerName").value=""; await loadWorkers(); await loadWorkerSelect(); } catch(e){toast(e.message,"error");} }
-
-// ========== USERS ==========
-async function loadUsers() {
-  try { const res = await apiCall("manageUser",{subAction:"list"}); document.getElementById("usersList").innerHTML = (res.users||[]).map(u => `
-    <div class="flex items-center justify-between p-3 border border-gray-100 rounded-xl">
-      <div><div class="font-medium">${u.fullName||'-'}</div><div class="text-xs text-gray-500">${u.email} — ${u.role}</div></div>
-      <div class="flex gap-2"><span class="px-2 py-0.5 rounded-full text-xs ${u.active?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${u.active?'Active':'Inactive'}</span>${u.active && u.email !== currentUser.email ? `<button class="deactivateUserBtn text-red-500 hover:text-red-700" data-email="${u.email}">Deactivate</button>` : ""}</div>
-    </div>`).join("");
-    document.querySelectorAll(".deactivateUserBtn").forEach(btn => btn.onclick = async () => { if(confirm(`Deactivate ${btn.dataset.email}?`)){ try { await apiCall("manageUser",{subAction:"deactivate",email:btn.dataset.email}); toast("User deactivated","success"); await loadUsers(); } catch(e){toast(e.message,"error");} } });
-  } catch(e) { toast(e.message,"error"); }
-}
-async function addUser() {
-  const d = { subAction:"add", fullName:document.getElementById("newUserName").value.trim(), email:document.getElementById("newUserEmail").value.trim(), password:document.getElementById("newUserPass").value, role:document.getElementById("newUserRole").value };
-  if(!d.fullName||!d.email||!d.password){document.getElementById("addUserMsg").textContent="All fields required";return;}
-  try { await apiCall("manageUser",d); toast("User created","success"); document.getElementById("addUserModal").classList.remove("active"); document.getElementById("addUserMsg").textContent=""; await loadUsers(); } catch(e){document.getElementById("addUserMsg").textContent=e.message;}
-}
-
-// ========== SETTINGS ==========
-async function loadSettings() {
-  try { const s = await apiCall("getSettings"); settings = s.settings || {}; document.getElementById("settingsForm").innerHTML = `
-    <div><label class="text-sm font-medium">Shop Name</label><input id="ss_shop_name" value="${settings.shop_name||''}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Currency Symbol</label><input id="ss_currency" value="${settings.currency||'৳'}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Shop Address</label><input id="ss_shop_address" value="${settings.shop_address||''}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Shop Phone</label><input id="ss_shop_phone" value="${settings.shop_phone
+</body>
+</html>
