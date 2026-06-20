@@ -20,7 +20,7 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; visibility: hidden; opacity: 0; transition: all 0.2s; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content; center; z-index: 1000; visibility: hidden; opacity: 0; transition: all 0.2s; }
     .modal-overlay.active { visibility: visible; opacity: 1; }
     .modal-container { background: white; border-radius: 1.5rem; width: 90%; max-width: 560px; max-height: 85vh; overflow-y: auto; padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
     .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 0.75rem 1.5rem; border-radius: 9999px; font-size: 0.875rem; z-index: 9999; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
@@ -272,8 +272,10 @@ async function login(email, password) {
     const res = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body: new URLSearchParams({ action:"login", email, password }) });
     const json = JSON.parse(await res.text());
     if (!json.success) { document.getElementById("loginError").textContent = json.error; return; }
-    sessionToken = json.token; currentUser = json.user;
-    sessionStorage.setItem("sp_token", sessionToken); sessionStorage.setItem("sp_user", JSON.stringify(currentUser));
+    sessionToken = json.token;
+    currentUser = json.user;
+    sessionStorage.setItem("sp_token", sessionToken);
+    sessionStorage.setItem("sp_user", JSON.stringify(currentUser));
     initApp();
   } catch(e) { document.getElementById("loginError").textContent = e.message; }
 }
@@ -521,7 +523,7 @@ async function reprintInvoiceFromDetail() {
   win.document.close(); win.print();
 }
 
-// ========== HISTORY (with Void button) ==========
+// ========== HISTORY ==========
 async function loadHistory() {
   try { const res = await apiCall("getInvoices"); const invoices = res.invoices || [];
     const canCollect = ["admin","manager"].includes(currentUser.role);
@@ -656,84 +658,4 @@ async function loadSettings() {
     <div><label class="text-sm font-medium">Shop Name</label><input id="ss_shop_name" value="${settings.shop_name||''}" class="w-full border rounded-lg p-2"></div>
     <div><label class="text-sm font-medium">Currency Symbol</label><input id="ss_currency" value="${settings.currency||'৳'}" class="w-full border rounded-lg p-2"></div>
     <div><label class="text-sm font-medium">Shop Address</label><input id="ss_shop_address" value="${settings.shop_address||''}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Shop Phone</label><input id="ss_shop_phone" value="${settings.shop_phone||''}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">VAT Reg Number</label><input id="ss_vat_reg" value="${settings.vat_reg||''}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Default VAT (%)</label><input id="ss_tax_rate" type="number" value="${settings.tax_rate||0}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Next Invoice #</label><input id="ss_next_invoice" type="number" value="${settings.next_invoice_number||1001}" class="w-full border rounded-lg p-2"></div>
-    <div><label class="text-sm font-medium">Thank You Message</label><input id="ss_ty_msg" value="${settings.thank_you_msg||'Thank you for your business!'}" class="w-full border rounded-lg p-2"></div>
-    <div class="col-span-2"><label class="text-sm font-medium">imgbb API Key</label><input id="ss_imgbb" value="${settings.imgbb_api_key||''}" class="w-full border rounded-lg p-2" type="password"></div>`;
-  } catch(e) { toast(e.message,"error"); } }
-async function saveSettings() { const updates = { shop_name:document.getElementById("ss_shop_name").value, currency:document.getElementById("ss_currency").value, shop_address:document.getElementById("ss_shop_address").value, shop_phone:document.getElementById("ss_shop_phone").value, vat_reg:document.getElementById("ss_vat_reg").value, tax_rate:parseFloat(document.getElementById("ss_tax_rate").value)||0, next_invoice_number:parseInt(document.getElementById("ss_next_invoice").value)||1001, thank_you_msg:document.getElementById("ss_ty_msg").value, imgbb_api_key:document.getElementById("ss_imgbb").value }; try { await apiCall("updateSettings",{settings:updates}); toast("Settings saved","success"); settings = {...settings,...updates}; } catch(e){toast(e.message,"error");} }
-
-// ========== SCANNERS ==========
-async function startInvoiceScanner() {
-  if (scanner) await stopInvoiceScanner();
-  const c = document.getElementById("scannerContainer");
-  c.classList.remove("hidden"); c.innerHTML = '<div id="inv-reader" style="width:100%"></div>';
-  document.getElementById("scannerControl").classList.remove("hidden");
-  scanner = new Html5Qrcode("inv-reader");
-  try { await scanner.start({facingMode:"environment"},{fps:15,qrbox:{width:250,height:250}}, decoded => { const prod = products.find(p=>p.barcode===decoded||p.sku===decoded); if(prod) addToCart(prod.sku, prod.barcode, prod.name, prod.selling_price); else toast("Product not found","error"); }, ()=>{}); } catch(e){ toast("Camera error","error"); stopInvoiceScanner(); }
-}
-async function stopInvoiceScanner() { if(scanner){try{await scanner.stop();await scanner.clear();}catch(e){} scanner=null;} document.getElementById("scannerContainer").classList.add("hidden"); document.getElementById("scannerControl").classList.add("hidden"); }
-async function startAddProductScanner() {
-  if (addProductScanner) await stopAddProductScanner();
-  const c = document.getElementById("barcodeScannerContainer");
-  c.classList.remove("hidden"); c.innerHTML = '<div id="add-reader" style="width:100%"></div>';
-  addProductScanner = new Html5Qrcode("add-reader");
-  try { await addProductScanner.start({facingMode:"environment"},{fps:15,qrbox:{width:250,height:250}}, decoded=>{ document.getElementById("newBarcode").value = decoded; stopAddProductScanner(); toast("Barcode scanned"); },()=>{}); } catch(e){ toast("Camera error","error"); stopAddProductScanner(); }
-}
-async function stopAddProductScanner() { if(addProductScanner){try{await addProductScanner.stop();await addProductScanner.clear();}catch(e){} addProductScanner=null;} document.getElementById("barcodeScannerContainer").classList.add("hidden"); }
-async function startInventoryScanner() {
-  const modal = document.createElement("div");
-  modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10001;display:flex;align-items:center;justify-content:center";
-  modal.innerHTML='<div style="width:90%;max-width:400px;background:white;border-radius:1rem;overflow:hidden"><div id="inv-scan-reader" style="width:100%"></div><button id="closeInvScan" style="margin:10px auto;display:block;background:#ef4444;color:white;border:none;padding:8px 20px;border-radius:2rem">Close</button></div>';
-  document.body.appendChild(modal);
-  inventoryScanner = new Html5Qrcode("inv-scan-reader");
-  try { await inventoryScanner.start({facingMode:"environment"},{fps:15,qrbox:{width:250,height:250}}, decoded=>{ document.getElementById("searchProduct").value = decoded; loadProducts(); stopInventoryScanner(); modal.remove(); toast("Scanned"); },()=>{}); document.getElementById("closeInvScan").onclick = ()=>{ stopInventoryScanner(); modal.remove(); }; } catch(e){ toast("Camera error","error"); stopInventoryScanner(); modal.remove(); }
-}
-async function stopInventoryScanner(){ if(inventoryScanner){try{await inventoryScanner.stop();await inventoryScanner.clear();}catch(e){}inventoryScanner=null;} }
-
-// ========== EVENT BINDINGS ==========
-document.getElementById("setupBtn").onclick = createAdmin;
-document.getElementById("loginBtn").onclick = () => login(document.getElementById("loginEmail").value.trim(), document.getElementById("loginPassword").value);
-document.getElementById("logoutBtn").onclick = logout;
-document.getElementById("addProductBtn").onclick = () => document.getElementById("addProductModal").classList.add("active");
-document.getElementById("scanInventoryBtn").onclick = startInventoryScanner;
-document.getElementById("scanTrigger").onclick = startInvoiceScanner;
-document.getElementById("stopScannerBtn").onclick = stopInvoiceScanner;
-document.getElementById("saveInvoiceBtn").onclick = saveInvoice;
-document.getElementById("resetBtn").onclick = resetInvoiceForm;
-document.getElementById("printInvoiceBtn").onclick = printInvoice;
-document.getElementById("printMushakBtn").onclick = printMushak;
-document.getElementById("saveNewProduct").onclick = saveNewProduct;
-document.getElementById("cancelAddProduct").onclick = () => { stopAddProductScanner(); document.getElementById("addProductModal").classList.remove("active"); document.getElementById("addProductMsg").textContent=""; };
-document.getElementById("scanBarcodeBtn").onclick = startAddProductScanner;
-document.getElementById("saveSettingsBtn").onclick = saveSettings;
-document.getElementById("addWorkerBtn").onclick = addWorker;
-document.getElementById("addPurchaseBtn").onclick = () => document.getElementById("addPurchaseModal").classList.add("active");
-document.getElementById("cancelPurchaseBtn").onclick = () => document.getElementById("addPurchaseModal").classList.remove("active");
-document.getElementById("lookupPurSkuBtn").onclick = lookupPurSku;
-document.getElementById("purQty").addEventListener("input", function(){ const q=parseFloat(document.getElementById("purQty").value)||0,c=parseFloat(document.getElementById("purCost").value)||0; document.getElementById("purTotal").value=fc(q*c); });
-document.getElementById("purCost").addEventListener("input", function(){ const q=parseFloat(document.getElementById("purQty").value)||0,c=parseFloat(document.getElementById("purCost").value)||0; document.getElementById("purTotal").value=fc(q*c); });
-document.getElementById("savePurchaseBtn").onclick = addPurchase;
-document.getElementById("addExpenseBtn").onclick = () => document.getElementById("addExpenseModal").classList.add("active");
-document.getElementById("cancelExpenseBtn").onclick = () => document.getElementById("addExpenseModal").classList.remove("active");
-document.getElementById("saveExpenseBtn").onclick = addExpense;
-document.getElementById("addUserBtn").onclick = () => document.getElementById("addUserModal").classList.add("active");
-document.getElementById("cancelUserBtn").onclick = () => document.getElementById("addUserModal").classList.remove("active");
-document.getElementById("saveUserBtn").onclick = addUser;
-document.getElementById("cancelCollectBtn").onclick = () => document.getElementById("collectDueModal").classList.remove("active");
-document.getElementById("loadPLBtn").onclick = loadPL;
-document.getElementById("closeDetailModal").onclick = () => document.getElementById("invoiceDetailModal").classList.remove("active");
-document.getElementById("reprintFromDetailBtn").onclick = reprintInvoiceFromDetail;
-["discountValue","discountType","vatRate","received"].forEach(id => { const el = document.getElementById(id); if(el) el.addEventListener("input", recalcTotals); });
-document.querySelectorAll(".modal-overlay").forEach(m => { m.onclick = e => { if(e.target===m) m.classList.remove("active"); }; });
-window.addEventListener("beforeunload", () => stopInvoiceScanner());
-window.addEventListener("load", () => {
-  const t = sessionStorage.getItem("sp_token"), u = sessionStorage.getItem("sp_user");
-  if (t && u) { sessionToken = t; currentUser = JSON.parse(u); initApp(); }
-  else { checkFirstRun(); }
-});
-</script>
-</body>
-</html>
+    <div><label class="text-sm font-medium">Shop Phone</label><input id="ss_shop_phone" value="${settings.shop_phone
